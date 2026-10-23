@@ -55,6 +55,14 @@ Backend: API .NET `WPApiPortalFeEc` (`C:\webpos\ecuador\WPApiPortalFeEc`).
   `clientRoleGuard`, `notFoundGuard`.
 - `[wpDisableIfNoPermission]` existe pero hoy no se usa en ninguna plantilla.
 
+## Skills de este proyecto
+
+Ninguna además de esta. Las skills propias de este repo se crean en `claude-config/proyectos/WPPORTALFEEC/skills/`, se
+listan en esta tabla con cuándo aplican y se instalan con `install.ps1 -Solo Proyectos -Proyecto WPPORTALFEEC`.
+
+| Skill | Cuándo aplica |
+|---|---|
+
 ## Deuda conocida — no copiar
 
 - **`BaseService` con `byCompany = true` no funciona**: `_services.base.ts` lee `lstore.getItem('company')`, pero la

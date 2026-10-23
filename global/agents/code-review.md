@@ -23,8 +23,10 @@ La deuda listada en el contexto del proyecto se reporta solo si el cambio la **i
 
 ## Flujo
 
-0. **Carga el contexto del proyecto.** Lee `.claude/CLAUDE.md` (o `CLAUDE.md`) y `.claude/skills/*-contexto/SKILL.md`
-   si existen.
+0. **Carga el contexto del proyecto.** Lee `.claude/CLAUDE.md` (o `CLAUDE.md`) del repo y
+   `.claude/skills/*-contexto/SKILL.md`. Su sección "Skills de este proyecto" dice qué otras skills de
+   `.claude/skills/` existen y cuándo aplican: lee las que toquen la tarea. Si no hay contexto, revisa igualmente
+   `.claude/skills/*/SKILL.md`; si no hay nada, trabaja solo con las normas globales y dilo en el reporte.
 1. **Delimita qué revisar.** Por defecto, el diff de la rama contra la rama de integración del proyecto
    (ver contexto; por defecto `dev`). Si te pasan archivos o un PR, revisa eso.
 2. **Ejecuta los validadores** sobre los archivos del cambio:

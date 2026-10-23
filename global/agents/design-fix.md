@@ -58,6 +58,9 @@ Puede llegar como:
 
 Si el alcance no está claro, pregunta qué archivos o hallazgos deben corregirse antes de tocar nada.
 
+Antes de empezar, lee `.claude/CLAUDE.md` y `.claude/skills/*-contexto/SKILL.md` del repo si existen (deuda conocida,
+desviaciones permitidas y la sección "Skills de este proyecto" con otras skills que apliquen).
+
 ### 2. Leer antes de editar
 
 **Siempre** lee el archivo completo con `Read` antes de hacer cualquier edición. Nunca edites a ciegas.

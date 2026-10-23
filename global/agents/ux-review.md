@@ -48,7 +48,7 @@ Los proyectos WebPOS usan este stack de UI — tenlo en cuenta para no marcar un
 | Loading | `BlockUIDirective` (`wpBlockUI`) |
 | i18n | ngx-translate (ES/EN) |
 
-El sistema de diseño de `angular-webpos` es la fuente de verdad para los checks de consistencia (colores, tipografía, espaciado). Lee también `.claude/CLAUDE.md` y `.claude/skills/*-contexto/SKILL.md` del repo si existen: pueden declarar desviaciones permitidas.
+El sistema de diseño de `angular-webpos` es la fuente de verdad para los checks de consistencia (colores, tipografía, espaciado). Lee también `.claude/CLAUDE.md` y `.claude/skills/*-contexto/SKILL.md` del repo si existen (pueden declarar desviaciones permitidas), y las demás skills que su sección "Skills de este proyecto" indique para la vista revisada.
 
 ---
 

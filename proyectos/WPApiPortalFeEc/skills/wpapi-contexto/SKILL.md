@@ -77,6 +77,14 @@ Otros proyectos de tests: `PortalFeEc.UnitTest.Services.SRI`, `.Infraestructure`
 
 Para una entidad nueva parte de `~/.claude/skills/dotnet-webpos/assets/plantilla-entidad/` y contrasta con estas.
 
+## Skills de este proyecto
+
+Ninguna además de esta. Las skills propias de este repo se crean en `claude-config/proyectos/WPApiPortalFeEc/skills/`, se
+listan en esta tabla con cuándo aplican y se instalan con `install.ps1 -Solo Proyectos -Proyecto WPApiPortalFeEc`.
+
+| Skill | Cuándo aplica |
+|---|---|
+
 ## Deuda conocida — no copiar
 
 - `UpdateApiKeyDto` expone `CompanyLicCod` (único ERROR de `check-backend.js` en la solución).

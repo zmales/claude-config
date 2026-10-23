@@ -70,6 +70,18 @@ Después de instalar, abre una sesión nueva de Claude Code para que cargue los 
 
 Para un proyecto nuevo, abre Claude Code en ese repo y escribe `/init-proyecto`.
 
+### Agregar una skill propia de un proyecto
+
+Para conocimiento que solo sirve en un repo (por ejemplo, reglas del SRI en la API):
+
+1. Créala en `proyectos/<Repo>/skills/<nombre>/SKILL.md` con `user-invocable: false` en el frontmatter.
+2. Añádela a la tabla "Skills de este proyecto" de `proyectos/<Repo>/skills/<prefijo>-contexto/SKILL.md`, diciendo
+   cuándo aplica: así los agentes saben que existe.
+3. Commit en este repo y `.\install.ps1 -Solo Proyectos -Proyecto <Repo>`.
+4. Abre una sesión nueva de Claude Code en ese repo.
+
+No la crees directamente en `<repo>/.claude/skills/`: esa carpeta está ignorada por git y se perdería.
+
 ## Cómo se usa en el día a día
 
 Pide el trabajo normalmente; la sesión principal lo delega al agente que corresponde. También puedes nombrarlo:

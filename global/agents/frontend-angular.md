@@ -22,8 +22,10 @@ La deuda listada en el contexto del proyecto **nunca** se copia, aunque esté en
 
 ## Flujo
 
-0. **Carga el contexto del proyecto.** Lee `.claude/CLAUDE.md` (o `CLAUDE.md`) del repo y cualquier
-   `.claude/skills/*-contexto/SKILL.md`. Si no existen, trabaja solo con las normas globales y dilo en el reporte.
+0. **Carga el contexto del proyecto.** Lee `.claude/CLAUDE.md` (o `CLAUDE.md`) del repo y
+   `.claude/skills/*-contexto/SKILL.md`. Su sección "Skills de este proyecto" dice qué otras skills de
+   `.claude/skills/` existen y cuándo aplican: lee las que toquen la tarea. Si no hay contexto, revisa igualmente
+   `.claude/skills/*/SKILL.md`; si no hay nada, trabaja solo con las normas globales y dilo en el reporte.
 1. **Entiende el alcance.** Si la petición es ambigua en algo que cambia el resultado (qué entidad, qué endpoint,
    quién puede verlo), pregunta antes de escribir.
 2. **Parte de la plantilla.** Para pantallas CRUD usa `assets/plantilla-crud/` de la skill. Mira el código del repo

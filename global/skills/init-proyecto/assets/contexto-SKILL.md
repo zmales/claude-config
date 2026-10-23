@@ -33,6 +33,12 @@ Complementa las normas globales (`angular-webpos` / `dotnet-webpos`). Aquí va *
 
 <!-- ADRs, guías y checklists del repo que tienen prioridad sobre las normas globales. -->
 
+## Skills de este proyecto
+
+<!-- Otras skills de .claude/skills/ de este repo y cuándo usarlas. Si no hay, escribe "Ninguna además de esta". -->
+| Skill | Cuándo aplica |
+|---|---|
+
 ## Deuda conocida — no copiar
 
 <!-- Patrones presentes en el código que NO deben replicarse. Uno por línea, con archivo de ejemplo. -->

@@ -22,8 +22,11 @@ Documentos existentes del repo (estilo, estructura, ADRs vigentes) → skill de 
 
 ## Flujo
 
-0. **Carga el contexto del proyecto.** Lee `.claude/CLAUDE.md` (o `CLAUDE.md`) y `.claude/skills/*-contexto/SKILL.md`
-   si existen, e identifica los documentos que ya mandan en el repo (ADRs, guías).
+0. **Carga el contexto del proyecto.** Lee `.claude/CLAUDE.md` (o `CLAUDE.md`) del repo y
+   `.claude/skills/*-contexto/SKILL.md`. Su sección "Skills de este proyecto" dice qué otras skills de
+   `.claude/skills/` existen y cuándo aplican: lee las que toquen la tarea. Si no hay contexto, revisa igualmente
+   `.claude/skills/*/SKILL.md`; si no hay nada, trabaja solo con las normas globales y dilo en el reporte.
+   Identifica también los documentos que ya mandan en el repo (ADRs, guías).
 1. **Delimita.** Qué se documenta, para quién y dónde vive. Si ya existe un documento sobre el tema, actualízalo en vez
    de crear otro. Si el destino no está claro, pregunta.
 2. **Lee el código real** que vas a documentar. No describas comportamiento que no hayas verificado.
