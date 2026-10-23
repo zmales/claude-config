@@ -1,6 +1,6 @@
 ---
 name: create-pull-request
-description: Crea un Pull Request en GitHub siguiendo las convenciones del proyecto. Úsala cuando el usuario quiera abrir un PR, subir cambios para revisión, o publicar una rama.
+description: Crea un Pull Request en GitHub siguiendo las convenciones de WebPOS (destino por defecto la rama de integración del proyecto, sin push a main ni force-push). Úsala cuando el usuario quiera abrir un PR, subir cambios para revisión, o publicar una rama.
 triggers:
   - crear pr
   - crear pull request
@@ -13,6 +13,23 @@ triggers:
 
 Crea un PR siguiendo las convenciones del proyecto. Ejecuta los pasos de forma autónoma pero preguntando al usuario lo necesario.
 
+## Reglas previas (no negociables)
+
+- **Solo cuando el usuario lo pide.** Nunca abras PRs ni hagas push por iniciativa propia.
+- **Lee las reglas del proyecto** (`CLAUDE.md` del repo y la skill `*-contexto` si existe); prevalecen
+  sobre esta skill.
+- **Rama destino por defecto:** la rama de integración del proyecto (ver skill `*-contexto` o
+  `CLAUDE.md`; por defecto `dev`). `main` está congelada: un PR a `main` solo si el usuario lo pide
+  explícitamente (release/hotfix).
+- **Nunca `git push` a `main`** ni a la rama de integración, y **nunca `--force`**. Solo se publica la
+  rama de trabajo actual (`feature/*`, `fix/*`, `hotfix/*`…). Si tras un rebase hace falta forzar, usa
+  `--force-with-lease` sobre la rama propia y solo con confirmación expresa.
+- **Atribución:** si el proyecto prohíbe trailers o firmas de IA (p. ej. WPApiPortalFeEc, ADR §13,
+  sin `Co-Authored-By`), no añadas atribución a commits ni a la descripción del PR. Si no lo prohíbe,
+  sigue la configuración de atribución de la sesión.
+- Los commits incluidos deben cumplir Conventional Commits (ver `/create-commits`). Si hay commits
+  vagos (`WIP`, `fix`), avísalo antes de continuar.
+
 ---
 
 ## Paso 1 — Preguntar rama destino
@@ -20,21 +37,24 @@ Crea un PR siguiendo las convenciones del proyecto. Ejecuta los pasos de forma a
 Mostrar al usuario las ramas remotas disponibles:
 
 ```bash
+git fetch origin --prune
 git branch -r | grep -v HEAD | sed 's/origin\///' | sort
 ```
 
-Mostrar el resultado como lista numerada y preguntar:
+Mostrar el resultado como lista numerada, **con la rama de integración del proyecto primero y marcada
+como recomendada**, y preguntar:
 
 ```
 ¿A qué rama va dirigido este PR?
 
-1. develop
-2. main
-3. master
+1. dev   (rama de integración — recomendada)
+2. main  (congelada; solo release/hotfix)
+3. ...
 (o escribe el nombre directamente)
 ```
 
-Esperar respuesta del usuario. Guardar como `<rama-destino>`.
+Esperar respuesta del usuario. Guardar como `<rama-destino>`. Si la rama actual **es** `main` o la
+rama de integración, detener el proceso: hay que trabajar en una rama propia.
 
 ---
 
@@ -119,12 +139,15 @@ git diff <rama-destino>...HEAD
 git remote get-url origin
 ```
 
+> Usa `origin/<rama-destino>` si la rama local no existe o está desactualizada.
 > Si no hay commits adicionales respecto a la rama destino, indicarlo al usuario y detener el proceso.
+> Si la rama está por detrás de `origin/<rama-destino>` (`git rev-list --count HEAD..origin/<rama-destino>` > 0), avisar y sugerir actualizarla (rebase o merge) antes del PR; no hacerlo sin confirmación.
 
 ---
 
 ## Paso 6 — Asegurar que el branch está en remoto
 
+Comprobar primero que `<branch-actual>` no es `main` ni la rama de integración (si lo es, detener).
 Antes de ejecutar el push, **pedir confirmación explícita al usuario**:
 
 ```
@@ -152,6 +175,8 @@ Analiza los commits y construye el título basado en el cambio más significativ
 ```
 tipo(alcance): descripción en español, infinitivo, max 72 chars
 ```
+
+Mismo formato que Conventional Commits (ver `/create-commits`); añade `!` si hay cambio incompatible.
 
 | Tipo | Uso |
 |------|-----|
@@ -215,7 +240,11 @@ Construir con información real extraída del diff y los commits:
 - Mínimo **1 aprobación** antes de mergear
 - Resolver **todos los comentarios** antes del merge
 - **No mergear** tu propio PR sin aprobación
+- Borrar la rama de trabajo después del merge
 ```
+
+Si el proyecto permite atribución de IA, añadirla al final de la descripción según la configuración
+de la sesión; si la prohíbe, omitirla.
 
 ---
 
@@ -275,7 +304,7 @@ Una vez autenticado, vuelve a ejecutar /create-pull-request
 Adicionalmente, como fallback hasta que instalen `gh`:
 1. Extraer owner y repo de la URL remota
 2. Construir URL: `https://github.com/<owner>/<repo>/compare/<rama-destino>...<branch-actual>`
-3. Guardar la descripción con `create_markdown_file` como `PR-<branch-actual>.md`
+3. Guardar la descripción como `PR-<branch-actual>.md` (fuera del repo o en una ruta ignorada, para no commitearla)
 4. Mostrar al usuario:
    - La URL directa para abrir el PR en GitHub manualmente
    - Reviewer, assignees y labels sugeridos para aplicar en la UI

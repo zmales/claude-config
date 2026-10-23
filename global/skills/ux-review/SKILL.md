@@ -1,201 +1,149 @@
 ---
 name: ux-review
-description: >-
-  Evaluate the user experience (UX) and accessibility of a web page, view, or
-  component and produce a prioritized list of recommendations. Use this skill
-  whenever someone asks how the UX, usability, or accessibility of a view,
-  screen, page, form, or component "is doing" or "looks", asks for a UX review
-  or audit, or wants feedback on button consistency, readable text, color
-  contrast, message wording, required-field indicators, error messages, or
-  accessibility — even if they never say the word "UX". Works for any web
-  framework (React, Angular, Vue, plain HTML, etc.) and evaluates from source
-  code, screenshots, or both. Always reach for this skill when the request is
-  about how something feels or reads for the end user, not just whether it
-  works.
+description: Checklist y plantilla para evaluar la experiencia de usuario (UX) y la accesibilidad de una vista, pantalla, formulario o componente web de un proyecto WebPOS, con criterios WCAG 2.1 AA y heurísticas de Nielsen, y producir un informe priorizado en español. Uso interno de los agentes ux-review (auditoría) y design-fix (aplicar correcciones); cubre consistencia de botones, legibilidad, contraste, uso del color, campos requeridos, mensajes de error, microcopy, estados de carga, teclado y responsive.
+user-invocable: false
 ---
 
-# UX Review
+# ux-review — Revisión de UX y accesibilidad
 
-Audit the user experience and accessibility of a web view and return a
-prioritized, actionable report in **Spanish** (Markdown), where every finding is
-justified by a recognized principle (a WCAG 2.1 success criterion or a Nielsen
-usability heuristic). The goal is feedback that is concrete and educational,
-never generic.
+Audita la experiencia de usuario y la accesibilidad de una vista web y devuelve un informe
+**en español, en Markdown**, priorizado y accionable, donde cada hallazgo se justifica con un principio
+reconocido (un criterio WCAG 2.1 o una heurística de Nielsen). El objetivo es un feedback concreto y
+didáctico, nunca genérico.
 
-This skill is framework-agnostic: the same checklist applies whether the view is
-built in React, Angular, Vue, or plain HTML. What changes is *where you look* in
-the code, so always confirm the stack first.
+## Stack de referencia en WebPOS
 
-## Core rule: ask before assuming
+Los portales WebPOS usan **Angular 20 + Bootstrap 5.3 + Bootstrap Icons** y un **sistema de diseño
+propio con tokens CSS** (color primario `--brand-600`, al que apunta `--bs-primary`; ver la skill
+`angular-webpos` → `references/estilos.md`). No se usa PrimeNG. Angular Material puede aparecer en
+pantallas antiguas, pero **no es la norma**: no lo tomes como referencia de consistencia ni lo
+recomiendes en correcciones. Patrones UX propios: `wpBlockUI` para carga, ngx-toastr para
+notificaciones y SweetAlert2 para confirmaciones destructivas.
 
-**Never make a decision or an interpretation on the user's behalf without
-asking first.** Whenever something needed for the review is missing, ambiguous,
-or not verifiable from the inputs at hand, stop and ask the user before
-proceeding — do not guess, do not fill the gap with a default, and do not
-silently pick the reading that seems most likely. This applies to, among others:
+Si la vista pertenece a otro stack, confírmalo antes de evaluar: el checklist es el mismo, solo cambia
+*dónde* mirar en el código.
 
-- The framework, UI library, or component conventions in use.
-- Whether an internal design system exists and what it mandates.
-- The scope: which view(s), and whether it's one or several.
-- Whether a pattern is intentional (a design-system convention) or a defect.
-- The intended behavior of a control, or how an ambiguous element should be read.
-- Anything that can't be confirmed from code/screenshot (e.g. real contrast
-  without a render, keyboard order without the running app).
+## Regla principal: preguntar antes de suponer
 
-When a check can't be answered with the inputs you have, either ask for the
-missing input or mark the item **"no verificado"** in the report — never assert
-a pass or fail you can't support. When a finding's severity is genuinely
-borderline (e.g. Alta vs. Media), flag the ambiguity to the user rather than
-deciding it silently. This rule does not block applying the documented priority
-rubric to facts you *do* have — it forbids inventing the facts.
+**No tomes decisiones ni interpretaciones por el usuario.** Si falta algo necesario, es ambiguo o no
+se puede verificar con las entradas disponibles, detente y pregunta (si corres como subagente y no
+puedes preguntar, devuelve la pregunta en tu respuesta o marca el punto como **"no verificado"**). Aplica
+a, entre otros:
 
-## Workflow
+- Alcance: qué vista(s) y si es una o varias.
+- Si un patrón es intencional (convención del sistema de diseño) o un defecto.
+- El comportamiento esperado de un control o cómo leer un elemento ambiguo.
+- Lo que no se confirma con código/captura (contraste real sin render, orden de foco sin la app).
 
-Follow these steps in order. Don't skip the context-gathering — the quality of
-the report depends on it.
+Nunca afirmes un "cumple" o "no cumple" que no puedas sostener. Si la severidad de un hallazgo es
+dudosa (Alta vs. Media), señala la duda en vez de decidir en silencio. Esta regla no impide aplicar la
+rúbrica de prioridades a hechos que **sí** tienes; prohíbe inventar hechos.
 
-### 1. Gather the inputs
+## Flujo
 
-The most complete review combines **source code + a screenshot** of the rendered
-view. Code reveals structure (labels, required markers, error message text,
-button markup, ARIA, semantics); the screenshot reveals what the user actually
-perceives (real contrast, spacing, visual hierarchy, alignment).
+Sigue los pasos en orden; la calidad del informe depende del contexto.
 
-- If you have only one of the two, proceed but say so in the report — note which
-  checks are limited (e.g. "contrast could not be verified precisely without a
-  rendered screenshot").
-- If neither is present, ask the user to paste the component/template code or
-  attach a screenshot before continuing.
+### 1. Reunir las entradas
 
-### 2. Establish context (ask only what the request needs)
+La revisión más completa combina **código fuente + captura** de la vista renderizada. El código revela
+estructura (labels, marcas de requerido, textos de error, markup de botones, ARIA, semántica); la
+captura revela lo que el usuario percibe (contraste real, espaciado, jerarquía, alineación).
 
-- **Framework / UI library.** Ask which framework and component library are in
-  use (e.g. Angular Material, PrimeNG, React + MUI, Bootstrap, custom). This
-  tells you how required fields, errors, and disabled states are normally
-  expressed, so you don't flag a library convention as a defect.
-- **Internal design system.** Ask whether the team has its own design system or
-  style guide (official colors, typography scale, message tone, component rules).
-  If yes, treat it as the source of truth for consistency checks. If there is
-  none, fall back to industry standards (WCAG 2.1 AA + Nielsen) and say so.
-- Ask the questions the request actually requires — don't pad with unnecessary
-  ones — but per the core rule above, when any of these is unknown, ask rather
-  than assume. Never substitute a default for an answer you could get by asking.
+- Con solo una de las dos, continúa pero dilo en el informe e indica qué comprobaciones quedan
+  limitadas.
+- Sin ninguna, pide el código del componente/plantilla o una captura antes de seguir.
 
-### 3. Run the evaluation
+### 2. Establecer el contexto
 
-Walk every category in the checklist below against the view(s). For each issue,
-identify the backing principle (the specific WCAG criterion or named Nielsen
-heuristic). See `references/wcag-nielsen.md` for the full criteria, the contrast
-math, and how to check each item from code vs. from a screenshot — read it
-whenever you need the exact threshold or wording.
+- Confirma que la vista usa el stack de referencia de arriba; si hay piezas legadas (Material, estilos
+  ad hoc), anótalo en **Contexto**.
+- Usa el sistema de diseño (tokens, componentes `wp-*`, patrones UX) como fuente de verdad para la
+  consistencia. Donde no diga nada, aplica WCAG 2.1 AA + Nielsen y dilo.
+- Pregunta solo lo que la petición necesita, pero no sustituyas por un valor por defecto lo que
+  puedes obtener preguntando.
 
-If the request covers **several views**, evaluate each one and produce a section
-per view, plus a single consolidated priority list at the top so the reader sees
-the most important issues across the whole flow first.
+### 3. Evaluar
 
-### 4. Note what already works well
+Recorre todas las categorías del checklist. Para cada problema identifica el principio que lo respalda
+(criterio WCAG concreto o heurística de Nielsen con nombre). Consulta
+[references/wcag-nielsen.md](references/wcag-nielsen.md) para umbrales exactos, la fórmula de contraste
+y cómo comprobar cada punto desde código o desde captura.
 
-Before listing problems, identify 2-4 things the view does right — clear labels,
-good contrast, consistent components, helpful empty states, etc. This is not
-filler: it tells the team what to preserve, balances the report, and is honest
-when the view is in good shape. Tie each positive to the same principles used
-for the findings.
+Si son **varias vistas**, evalúa cada una en su sección y añade arriba una lista consolidada de
+prioridades para que se vea primero lo más importante de todo el flujo.
 
-### 5. Assign a priority to each finding
+### 4. Señalar lo que ya funciona bien
 
-Use this rubric exactly. The labels (Alto / Medio / Bajo) appear verbatim in the
-Spanish report:
+Antes de los problemas, identifica 2-4 aciertos reales (labels claros, buen contraste, componentes
+consistentes, estados vacíos útiles…), cada uno ligado a su principio. Dice al equipo qué conservar y
+equilibra el informe. No los inventes.
 
-- **Alto** — Breaks the experience or excludes users: the user can't complete
-  the task, can't read essential text, can't perceive an error, or the view is
-  inaccessible to assistive technology. (e.g. contrast below the WCAG minimum on
-  body text, a generic/technical error that hides what went wrong, a form field
-  with no label, required info conveyed by color alone.)
-- **Medio** — Works, but is hard to read, understand, or trust: it costs the
-  user effort even though the task is technically possible. (e.g. inconsistent
-  button styles, cramped line length, a vague but recoverable message, weak
-  visual hierarchy.)
-- **Bajo** — Suggestion / polish: the experience is fine but could be smoother
-  or more pleasant. (e.g. micro-copy refinements, spacing tweaks, optional
-  helper text.)
+### 5. Asignar prioridad
 
-**Do not force or invent findings.** Report only issues that genuinely exist and
-that you can support against a WCAG criterion or Nielsen heuristic. Never lower
-the bar, stretch a non-issue into a problem, or manufacture a finding just to
-fill a priority level. If a level has no real findings, that level is **zero** —
-state it explicitly with "Sin hallazgos." instead of padding it. It is entirely
-valid for some — or all three — priority levels to be empty: a view in good shape
-is an honest, acceptable result. The review's value is measured by accuracy, not
-by how many findings it produces. The same applies in reverse to "Lo que
-funciona bien": list real strengths, and don't invent them either.
+Usa exactamente esta rúbrica (las etiquetas aparecen tal cual en el informe):
 
-### 6. Produce the report
+- **Alta** — Rompe la experiencia o excluye usuarios: no se puede completar la tarea, leer texto
+  esencial, percibir un error, o la vista es inaccesible para tecnologías de apoyo. (Contraste bajo el
+  mínimo en texto de cuerpo, error genérico/técnico que oculta qué pasó, campo sin label, información
+  solo por color.)
+- **Media** — Funciona, pero cuesta leer, entender o confiar. (Botones inconsistentes, líneas muy
+  largas, mensaje vago pero recuperable, jerarquía visual débil.)
+- **Baja** — Sugerencia / pulido. (Microcopy, ajustes de espaciado, texto de ayuda opcional.)
 
-Write the report in **Spanish, in Markdown**, using the exact template below.
+**No fuerces ni inventes hallazgos.** Reporta solo lo que existe y puedes respaldar con WCAG o Nielsen.
+Si un nivel no tiene hallazgos reales, escribe **"Sin hallazgos."**. Es válido que uno o los tres niveles
+estén vacíos: el valor del informe es su exactitud, no su cantidad.
 
-## Evaluation checklist
+### 6. Redactar el informe
 
-Cover all of these. The parenthetical is the primary backing principle; details
-and thresholds live in `references/wcag-nielsen.md`.
+En español y Markdown, con la plantilla exacta de abajo.
 
-1. **Consistency and visual hierarchy** — buttons share style, size, label
-   conventions, and placement; primary vs. secondary actions are
-   distinguishable; visual hierarchy guides the eye. (Nielsen #4 consistency &
-   standards, #8 aesthetic & minimalist design; WCAG 3.2.4.)
-2. **Readability and typography** — font size, weight, and line length make text
-   readable; text resizes and tolerates spacing overrides without breaking.
-   (WCAG 1.4.4 resize text, 1.4.12 text spacing.)
-3. **Color contrast** — text meets the contrast minimums (4.5:1 normal, 3:1
-   large), and meaningful non-text UI (icons, borders, control states) meets
-   3:1. (WCAG 1.4.3 contrast, 1.4.11 non-text contrast.)
-4. **Use of color** — information is never conveyed by color alone (errors,
-   required fields, status, links). (WCAG 1.4.1 use of color.)
-5. **Forms and required indicators** — every field has a visible, programmatic
-   label; required fields are marked with more than color; inputs have clear
-   instructions and an autocomplete/input-purpose hint where relevant. (WCAG
-   3.3.2 labels or instructions, 1.3.1 info & relationships, 1.3.5 identify
-   input purpose.)
-6. **Error messages** — errors are identified clearly, in plain user-centered
-   language, and suggest how to fix the problem. Treat the two failure modes as
-   **separate findings** when both are present: (a) *generic* messages that state
-   no cause or recovery ("Error", "Algo salió mal"), and (b) *technical* messages
-   that leak internals (stack traces, exception names, HTTP codes). Don't fold
-   the generic one into the technical one — each fails for its own reason and
-   needs its own fix. (WCAG 3.3.1 error identification, 3.3.3 error suggestion;
-   Nielsen #9 help users recover from errors, #2 match with the real world.)
-7. **Microcopy and language** — labels, buttons, and messages speak the user's
-   language and match real-world expectations; no internal jargon; a control's
-   visible label matches its accessible name. (Nielsen #2 match with the real
-   world; WCAG 2.5.3 label in name.)
-8. **Feedback and system status** — loading, success, empty, and disabled states
-   are visible, and important status changes are announced to assistive tech.
-   (Nielsen #1 visibility of system status; WCAG 4.1.3 status messages.)
-9. **Accessibility and keyboard navigation** — semantic structure and headings,
-   alt text on meaningful images, focusable interactive elements with a visible
-   focus indicator, sensible focus order. (WCAG 1.1.1 non-text content, 1.3.1,
-   2.1.1 keyboard, 2.4.7 focus visible, 4.1.2 name/role/value.)
-10. **Responsive and pointer interaction** — content reflows at small widths
-    without horizontal scrolling or clipping, works in both orientations, and
-    touch targets are comfortably sized and not gesture-only. (WCAG 1.4.10
-    reflow, 1.3.4 orientation, 2.5.1 pointer gestures; target size — note it's
-    AAA in 2.1 — as a usability recommendation.)
-11. **Error prevention and cognitive load** — the design prevents avoidable
-    mistakes (confirmations on destructive actions, sensible defaults) and favors
-    recognition over recall. (Nielsen #5 error prevention, #6 recognition rather
-    than recall.)
+## Checklist de evaluación
 
-## Report template
+El paréntesis indica el principio principal; detalles y umbrales en `references/wcag-nielsen.md`.
 
-ALWAYS use this exact structure. It is the literal output and stays in Spanish
-(the rest of this skill is English; only this template is in the report's
-language). Always keep the three priority sections; if a level has no findings,
-write "Sin hallazgos." under its heading so the zero is explicit (never silently
-drop a level or pad it to look non-empty).
+1. **Consistencia y jerarquía visual** — los botones comparten estilo, tamaño, convención de texto y
+   ubicación; acción primaria (`btn-primary` / `--brand-600`) distinguible de las secundarias; la
+   jerarquía guía la vista. (Nielsen #4 consistencia y estándares, #8 diseño estético y minimalista;
+   WCAG 3.2.4.)
+2. **Legibilidad y tipografía** — tamaño, peso y longitud de línea legibles; el texto se amplía y
+   tolera cambios de espaciado sin romperse. (WCAG 1.4.4, 1.4.12.)
+3. **Contraste de color** — texto ≥ 4.5:1 (normal) y ≥ 3:1 (grande); UI no textual con significado
+   (iconos, bordes, estados) ≥ 3:1. (WCAG 1.4.3, 1.4.11.)
+4. **Uso del color** — la información nunca se transmite solo con color (errores, requeridos, estados,
+   enlaces). (WCAG 1.4.1.)
+5. **Formularios e indicadores de requerido** — cada campo tiene label visible y programático
+   (`for`/`id`); los requeridos se marcan con algo más que color; instrucciones claras y
+   `autocomplete` donde aplique. (WCAG 3.3.2, 1.3.1, 1.3.5.)
+6. **Mensajes de error** — identificados con claridad, en lenguaje del usuario y con sugerencia de
+   corrección. Trata como **hallazgos separados** cuando aparezcan ambos: (a) mensajes *genéricos* sin
+   causa ni salida ("Error", "Algo salió mal") y (b) mensajes *técnicos* que filtran internos (stack
+   traces, nombres de excepción, códigos HTTP). Cada uno falla por su motivo y necesita su arreglo.
+   (WCAG 3.3.1, 3.3.3; Nielsen #9 ayudar a reconocer y recuperarse de errores, #2 relación con el
+   mundo real.)
+7. **Microcopy y lenguaje** — etiquetas, botones y mensajes en el idioma del usuario, sin jerga interna;
+   textos traducidos (no claves i18n visibles); el label visible coincide con el nombre accesible.
+   (Nielsen #2; WCAG 2.5.3.)
+8. **Feedback y estado del sistema** — estados de carga, éxito, vacío y deshabilitado visibles; los
+   cambios importantes se anuncian a tecnologías de apoyo. (Nielsen #1; WCAG 4.1.3.)
+9. **Accesibilidad y teclado** — estructura semántica y encabezados, `alt` en imágenes con significado,
+   elementos interactivos enfocables con foco visible (`:focus-visible`, nunca `outline: none` sin
+   reemplazo), orden de foco lógico. (WCAG 1.1.1, 1.3.1, 2.1.1, 2.4.7, 4.1.2.)
+10. **Responsive e interacción táctil** — el contenido se reacomoda en anchos pequeños sin scroll
+    horizontal ni recortes, funciona en ambas orientaciones, objetivos táctiles cómodos y sin depender
+    de gestos. (WCAG 1.4.10, 1.3.4, 2.5.1; tamaño de objetivo —AAA en 2.1— como recomendación.)
+11. **Prevención de errores y carga cognitiva** — confirmación (SweetAlert2) en acciones destructivas,
+    valores por defecto sensatos, reconocer antes que recordar. (Nielsen #5, #6.)
+
+## Plantilla del informe
+
+Usa SIEMPRE esta estructura. Mantén las tres secciones de prioridad; si un nivel no tiene hallazgos,
+escribe "Sin hallazgos." bajo su título.
 
 ```markdown
 # Revisión de experiencia de usuario — [nombre de la vista]
 
-**Contexto:** [framework / librería UI · con o sin sistema de diseño interno · entradas usadas: código y/o captura]
+**Contexto:** [Angular 20 + Bootstrap 5.3 + sistema de diseño WebPOS · piezas legadas si las hay · entradas usadas: código y/o captura]
 **Estándares aplicados:** WCAG 2.1 (AA) y heurísticas de Nielsen
 
 ## Resumen
@@ -208,9 +156,9 @@ drop a level or pad it to look non-empty).
 ## Prioridad Alta
 1. **[Título corto del hallazgo]**
    - **Qué:** [descripción concreta de lo que ocurre y dónde.]
-   - **Por qué:** [el motivo teórico — criterio WCAG o heurística de Nielsen — y por qué afecta al usuario.]
+   - **Por qué:** [criterio WCAG o heurística de Nielsen, y por qué afecta al usuario.]
    - **Recomendación:** [acción concreta para corregirlo.]
-   - **Código sugerido:** [cuando aplique un cambio de código puntual, un snippet corto con la corrección. Omitir esta línea si el arreglo no es de código.]
+   - **Código sugerido:** [snippet corto con la corrección cuando sea un cambio de código; omitir si no aplica.]
 
 ## Prioridad Media
 1. **[Título corto del hallazgo]**
@@ -219,39 +167,26 @@ drop a level or pad it to look non-empty).
    - **Recomendación:** ...
 
 ## Prioridad Baja
-Sin hallazgos.    <!-- usar esta línea cuando una prioridad no tenga hallazgos reales; si los hay, listarlos con el mismo formato de arriba -->
+Sin hallazgos.    <!-- usar cuando no haya hallazgos reales; si los hay, listarlos con el mismo formato -->
 ```
 
-When several views are reviewed, repeat the per-view sections under a top-level
-`## [Vista]` heading and add a `## Prioridades consolidadas` list at the very
-top.
+Con varias vistas, repite las secciones bajo un `## [Vista]` por cada una y añade al principio
+`## Prioridades consolidadas`.
 
-The `**Código sugerido:**` line is shown above only on the Alta example to keep
-the template short, but it applies to **any** finding (Alta, Media, or Baja)
-whenever there's a concrete code fix. Omit the line when the fix isn't code.
+La línea **Código sugerido** aparece solo en el ejemplo de Alta para abreviar, pero aplica a cualquier
+prioridad cuando el arreglo es de código.
 
-## Principles for good findings
+## Principios para buenos hallazgos
 
-- **Be specific.** Point to the actual element (e.g. the "Guardar" button in the
-  bottom-right corner) and the actual problem, not a vague category.
-- **Always justify.** Every finding states *why* it matters, tied to a named
-  WCAG criterion or Nielsen heuristic. This is what makes the report educational
-  rather than opinion.
-- **Cite precisely.** Map each issue to the criterion it *actually* satisfies or
-  violates, and double-check the number and name. Common trap: the input `type`
-  attribute (`type="email"`) is not WCAG 1.3.5 — that criterion is about
-  `autocomplete` tokens. Credit `autocomplete="email"` to 1.3.5, not `type`.
-  Don't attach a plausible-sounding criterion to a feature it doesn't cover.
-- **Include a fix snippet.** When the fix is a concrete code change, add a short
-  corrected snippet under "Código sugerido" (the attribute, CSS rule, or markup
-  to apply). Keep it minimal and copy-pasteable. Skip it when the fix is process
-  or design rather than code.
-- **Don't invent.** If something can't be verified with the inputs at hand (e.g.
-  exact contrast ratio without a screenshot, keyboard behavior without running
-  the app), ask for the missing input or say it's unverified — never guess (see
-  the core rule).
-- **Respect conventions.** A documented design-system or library pattern is not a
-  defect just because it differs from a default. Ask to confirm before flagging
-  it rather than interpreting intent yourself.
-- **Stay constructive.** The tone is a helpful peer review: clear about problems,
-  always paired with a fix.
+- **Sé específico.** Señala el elemento real (p. ej. el botón "Guardar" de la esquina inferior derecha)
+  y el problema real.
+- **Justifica siempre.** Cada hallazgo dice *por qué* importa, ligado a un criterio WCAG o heurística
+  con nombre. Eso lo hace didáctico y no una opinión.
+- **Cita con precisión.** Verifica número y nombre del criterio. Trampa habitual: `type="email"` no es
+  WCAG 1.3.5; ese criterio trata de los tokens `autocomplete`. Atribuye `autocomplete="email"` a 1.3.5.
+- **Incluye el snippet de corrección** cuando el arreglo sea de código, mínimo y copiable, usando
+  tokens del sistema de diseño (`var(--brand-600)`, `rem`) en lugar de valores fijos.
+- **No inventes.** Lo que no se puede verificar con las entradas se pide o se marca "no verificado".
+- **Respeta las convenciones.** Un patrón documentado del sistema de diseño no es un defecto por
+  diferir de un estándar genérico; confírmalo antes de señalarlo.
+- **Tono constructivo.** Revisión entre colegas: claro con los problemas, siempre con su solución.
