@@ -1,0 +1,278 @@
+// ═════════════════════════════════════════════════════════════════════════════
+// VARIABLES — Sistema de diseño WebPOS Ecuador
+//
+// Fuente de verdad: mockup `webpos-rediseno-A-portlet.html` (bloque `:root`).
+// Aquí viven los MISMOS valores expresados como variables Sass, para los
+// componentes que hacen `@use 'variables' as *` y no pueden usar las custom
+// properties CSS (por ejemplo dentro de funciones de color de Sass como
+// `rgba($primary, .12)`).
+//
+// El espejo en CSS custom properties (--brand-*, --n-*, --r-*, --fs-* …) vive
+// en `src/styles/_tokens.scss` y se emite UNA sola vez desde `src/styles.scss`.
+//
+// NOTA: este archivo debe contener SOLO variables/funciones de Sass (sin
+// selectores que emitan CSS) y no debe importar bootstrap.scss completo.
+// Muchos componentes lo importan únicamente para usar $primary, $gray-*, etc.
+// en sus propios estilos con ámbito de Angular; si compilara Bootstrap entero,
+// cada uno de esos componentes generaría una copia duplicada y "scoped" (con
+// [_ngcontent-xxx]) de clases globales como .card-header, con más
+// especificidad que el :host de wp-portlet-header y pisando su fondo. La
+// compilación real de Bootstrap vive en src/styles.scss.
+//
+// Sólo se carga `functions` (no `variables`): así las variables derivadas de
+// Bootstrap ($spacers, $input-*, $grid-gutter-width, …) se calculan a partir de
+// los valores de abajo cuando `bootstrap.scss` importa sus `!default`, en vez
+// de quedarse con la derivación del valor por defecto.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// `node_modules` está en `stylePreprocessorOptions.includePaths` (angular.json),
+// así que Bootstrap se resuelve por load path. Eso además hace que Dart Sass lo
+// trate como dependencia y `quietDeps` silencie sus avisos internos.
+@use 'bootstrap/scss/functions' as *;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Escala de marca — brand-600 es el color de acción (6,87:1 sobre blanco)
+// ─────────────────────────────────────────────────────────────────────────────
+$brand-50:  #eff6fb;
+$brand-100: #dcebf6;
+$brand-200: #b6d5ea;
+$brand-300: #7fb4d8;
+$brand-400: #3d8fc2;
+$brand-500: #1272aa;
+$brand-600: #0b5e96;
+$brand-700: #094b79;
+$brand-800: #083b5f;
+$brand-900: #072b45;
+$brand-950: #051e31;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Escala neutra — reemplaza los $gray-* de Bootstrap
+// ─────────────────────────────────────────────────────────────────────────────
+$n-0:   #ffffff;
+$n-25:  #fbfcfd;
+$n-50:  #f6f8f9;
+$n-100: #edf0f3;
+$n-200: #e0e5ea;
+$n-300: #cdd5dc;
+$n-400: #9faab6;
+$n-500: #7f8c99;
+$n-600: #5b6672;
+$n-700: #404a55;
+$n-800: #28303a;
+$n-900: #161c24;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Semánticos — un tono por familia + fondo y borde derivados
+// ─────────────────────────────────────────────────────────────────────────────
+$ok-50:  #e8f6f0;
+$ok-200: #a9dcc8;
+$ok-600: #0e7c5a;
+$ok-700: #0a5f45;
+
+$warn-50:  #fdf4e7;
+$warn-200: #f3d5a6;
+$warn-600: #a35507; // oscurecido desde #B25E09 para pasar AA sobre $warn-50 (ver _tokens.scss)
+
+$err-50:  #fdecea;
+$err-200: #f4b8b2;
+$err-600: #b42318;
+$err-700: #912018;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Alias heredados — mismos nombres de siempre, nuevos valores
+//    (para no romper los componentes que ya los usan)
+// ─────────────────────────────────────────────────────────────────────────────
+$white: $n-0;
+$black: #000;
+
+$gray-100: $n-100;
+$gray-200: $n-200;
+$gray-300: $n-300;
+$gray-400: $n-400;
+$gray-500: $n-500; // bordes
+$gray-600: $n-600; // textos secundarios
+$gray-700: $n-700;
+$gray-800: $n-800; // textos
+$gray-900: $n-900;
+
+$blue:   $brand-600;
+$indigo: #6610f2;
+$purple: #6f42c1;
+$pink:   #d63384;
+$red:    $err-600;
+$orange: $warn-600;
+$yellow: $warn-600;
+$green:  $ok-600;
+$teal:   #20c997;
+$cyan:   $brand-500;
+
+$primary:         $brand-600;
+$primary-dark:    $brand-700;
+$primary-darker:  $brand-950;
+$primary-light:   $brand-400;
+$primary-lighter: $brand-100;
+
+$secondary: $n-700;
+$success:   $ok-600;
+$succes:    $ok-600; // alias histórico (typo) todavía en uso
+$info:      $brand-500;
+$warning:   $warn-600;
+$danger:    $err-600;
+
+$light: $n-50;
+$dark:  $n-800;
+
+// Roles de texto y borde (espejo Sass de --text-* / --border-*)
+$text-strong: $n-900;
+$text:        $n-800;
+$text-muted:  $n-600;
+// El mockup apunta este rol a n-500 (3,43:1 sobre blanco), por debajo de AA, y
+// este rol SÍ lleva texto. Se usa un gris algo más oscuro (5,26:1 sobre blanco,
+// 4,93:1 sobre n-50); n-500 se mantiene intacto para bordes e iconos.
+$text-subtle: #646d77;
+
+$border-control: $n-500;
+$border-divider: $n-200;
+$border-strong:  $n-300;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Mapa de Bootstrap
+// ─────────────────────────────────────────────────────────────────────────────
+$theme-colors: (
+  'primary':         $primary,
+  'primary-dark':    $primary-dark,
+  'primary-darker':  $primary-darker,
+  'primary-light':   $primary-light,
+  'primary-lighter': $primary-lighter,
+  'secondary':       $secondary,
+  'success':         $success,
+  'info':            $info,
+  'warning':         $warning,
+  'danger':          $danger,
+  'light':           $light,
+  'dark':            $dark
+);
+
+$body-bg:          $n-50;
+$body-color:       $text;
+$border-color:     $border-divider;
+$link-color:       $brand-700;
+$link-hover-color: $brand-800;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Radios — escala fija (antes: 15px / 8px / 0.625rem / 0.5rem sueltos)
+// ─────────────────────────────────────────────────────────────────────────────
+$r-sm:   4px;
+$r-md:   6px;
+$r-lg:   8px;
+$r-pill: 999px;
+
+$border-radius:      $r-sm;
+$border-radius-sm:   $r-sm;
+$border-radius-lg:   $r-md;
+$border-radius-xl:   $r-lg;
+$border-radius-xxl:  $r-lg;
+$border-radius-pill: $r-pill;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Espaciado base-4
+// ─────────────────────────────────────────────────────────────────────────────
+$s-1:  4px;
+$s-2:  8px;
+$s-3:  12px;
+$s-4:  16px;
+$s-5:  20px;
+$s-6:  24px;
+$s-8:  32px;
+$s-10: 40px;
+
+// Escala de utilidades de Bootstrap (p-*, m-*, g-*): 4 / 8 / 16 / 24 / 48px
+$spacer: 1rem;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. Sombras
+// ─────────────────────────────────────────────────────────────────────────────
+$sh-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+$sh-sm: 0 1px 3px rgba(16, 24, 40, 0.07), 0 1px 2px rgba(16, 24, 40, 0.04);
+$sh-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+$sh-lg: 0 16px 40px rgba(16, 24, 40, 0.16);
+
+$box-shadow-sm: $sh-xs;
+$box-shadow:    $sh-sm;
+$box-shadow-lg: $sh-lg;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. Tipografía — Inter con fallback al stack anterior
+// ─────────────────────────────────────────────────────────────────────────────
+// stylelint-disable value-keyword-case
+$font-family-sans-serif: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+  'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+  'Noto Color Emoji';
+$font-family-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+  'Courier New', monospace;
+// stylelint-enable value-keyword-case
+
+$variable-prefix: bs-; // BS 5.3 lo renombró a $prefix; se mantiene por compatibilidad
+$prefix: bs-;
+$font-family-base: var(--#{$variable-prefix}font-sans-serif);
+$font-family-code: var(--#{$variable-prefix}font-monospace);
+
+// Escala tipográfica del mockup (px → rem sobre raíz de 16px)
+$fs-micro: 0.6875rem; // 11px
+$fs-xs:    0.75rem;   // 12px
+$fs-sm:    0.8125rem; // 13px
+$fs-base:  0.875rem;  // 14px
+$fs-md:    1rem;      // 16px
+$fs-lg:    1.125rem;  // 18px
+$fs-xl:    1.25rem;   // 20px
+$fs-2xl:   1.5rem;    // 24px
+$fs-3xl:   1.75rem;   // 28px
+
+$font-size-base: $fs-base;
+$font-size-sm:   $fs-sm;
+$font-size-lg:   $fs-md;
+
+// Alias heredados
+$font-size-title:    $fs-md; // títulos de tarjeta / portlet
+$font-size-subtitle: $fs-sm;
+
+$h1-font-size: $fs-3xl;
+$h2-font-size: $fs-2xl;
+$h3-font-size: $fs-xl;
+$h4-font-size: $fs-lg;
+$h5-font-size: $fs-md;
+$h6-font-size: $fs-base;
+
+$line-height-base:     1.5;
+$headings-font-weight: 600;
+$headings-color:       $text-strong;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. Alturas de control — inputs y botones
+// ─────────────────────────────────────────────────────────────────────────────
+$h-control:    34px;
+$h-control-sm: 28px;
+$h-control-lg: 40px;
+
+$btn-font-size:     $fs-sm;
+$btn-font-weight:   500;
+$btn-padding-y:     0;
+$btn-padding-x:     $s-3;
+$btn-border-radius: $r-sm;
+
+$input-padding-x:          10px;
+$input-border-color:       $border-control;
+$input-focus-border-color: $brand-600;
+$input-focus-box-shadow:   0 0 0 3px rgba($brand-600, 0.14);
+$input-placeholder-color:  var(--text-placeholder);
+
+$table-cell-padding-y: 0.625rem; // 10px
+$table-cell-padding-x: $s-3;
+$table-border-color:   $n-100;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. Chrome de la aplicación
+// ─────────────────────────────────────────────────────────────────────────────
+$sidebar-w:           252px;
+$sidebar-w-collapsed: 56px;
+$topbar-h:            56px;

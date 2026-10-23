@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Verifica la paridad de traducciones ES/EN del portal.
+ * Verifica la paridad de traducciones ES/EN de un proyecto Angular WebPOS (ngx-translate con archivos .ts).
  *
  * Para cada `*.es.ts` bajo `src/app/_config/lang/` busca su `*.en.ts` hermano, evalúa ambos (transpilados con
  * el `typescript` del proyecto) y compara las claves de cada constante exportada. Reporta:
@@ -9,9 +9,12 @@
  *   - claves que existen en un idioma y faltan en el otro
  *   - valores vacíos
  *   - archivos de feature que nadie importa (traducciones que no se registraron en es.ts / en.ts)
+ *   - un archivo de inglés que importa uno de español (`en.ts` → `x.es`) o viceversa
  *
- * Uso (desde la raíz del repo):  node "$HOME/.claude/skills/wp-frontend/scripts/check-i18n.js" [carpeta-lang]
- * Sale con código 1 si encuentra problemas.
+ * Uso (desde la raíz del repo):
+ *   node "$HOME/.claude/skills/angular-webpos/scripts/check-i18n.js" [carpeta-de-idiomas]
+ * El argumento opcional es la CARPETA de idiomas (por defecto src/app/_config/lang), no un archivo suelto.
+ * Sale con código 1 si encuentra problemas y con 2 si la carpeta no existe o no contiene pares .es/.en.
  */
 const fs = require('fs');
 const path = require('path');
@@ -28,8 +31,11 @@ try {
   process.exit(2);
 }
 
-if (!fs.existsSync(LANG_DIR)) {
-  console.error(`No existe la carpeta de traducciones: ${LANG_DIR}`);
+if (!fs.existsSync(LANG_DIR) || !fs.statSync(LANG_DIR).isDirectory()) {
+  console.error(
+    `No existe la carpeta de traducciones: ${LANG_DIR}\n` +
+    'El argumento es la CARPETA de idiomas (p. ej. src/app/_config/lang), no un archivo.'
+  );
   process.exit(2);
 }
 
@@ -80,6 +86,15 @@ const esFiles = files.filter((f) => /(^|[\\/.])es\.ts$/.test(f));
 const problems = [];
 const add = (file, msg) => problems.push({ file: rel(file), msg });
 
+if (esFiles.length === 0) {
+  console.error(
+    `check-i18n: 0 pares .es/.en en ${rel(LANG_DIR) || '.'}.\n` +
+    'El argumento debe ser la carpeta de idiomas (la que contiene es.ts / en.ts y las subcarpetas de feature), ' +
+    'p. ej. src/app/_config/lang. Sin argumento se usa esa ruta.'
+  );
+  process.exit(2);
+}
+
 for (const esFile of esFiles) {
   const enFile = esFile.replace(/es\.ts$/, 'en.ts');
   if (!fs.existsSync(enFile)) {
@@ -117,11 +132,33 @@ for (const enFile of files.filter((f) => /(^|[\\/.])en\.ts$/.test(f))) {
   if (!fs.existsSync(enFile.replace(/en\.ts$/, 'es.ts'))) add(enFile, 'falta el archivo en español');
 }
 
-// Archivos de feature que ningún otro archivo importa: la traducción existe pero no se cargó.
-const sources = files.map((f) => fs.readFileSync(f, 'utf8'));
+// Imports cruzados: un archivo de un idioma que importa uno del otro (p. ej. en.ts con `./x/x.es`) hace que la
+// pantalla salga en el idioma equivocado aunque las claves coincidan.
+const langOf = (f) => (/(^|[\\/.])en\.ts$/.test(f) ? 'en' : 'es');
 for (const f of files) {
+  const lang = langOf(f);
+  const other = lang === 'en' ? 'es' : 'en';
+  const otherRe = new RegExp(`[./]${other}(\\.ts)?$`);
+  const src = fs.readFileSync(f, 'utf8');
+  const re = /from\s+['"]([^'"]+)['"]/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const spec = m[1];
+    if (otherRe.test(spec)) {
+      const line = src.slice(0, m.index).split('\n').length;
+      add(f, `línea ${line}: el archivo ${lang.toUpperCase()} importa "${spec}" (${other.toUpperCase()})`);
+    }
+  }
+}
+
+// Archivos de feature que ningún otro archivo importa: la traducción existe pero no se cargó.
+// Solo tiene sentido si se revisa la carpeta raíz (la que contiene es.ts / en.ts).
+const hasRoots = fs.existsSync(path.join(LANG_DIR, 'es.ts')) && fs.existsSync(path.join(LANG_DIR, 'en.ts'));
+if (!hasRoots) console.log('check-i18n: aviso — la carpeta no tiene es.ts / en.ts; se omite la comprobación de registro.');
+const sources = files.map((f) => fs.readFileSync(f, 'utf8'));
+for (const f of hasRoots ? files : []) {
   if (/[\\/](es|en)\.ts$/.test(f)) continue; // raíces
-  const stem = path.basename(f, '.ts'); // p. ej. carrier.es
+  const stem = path.basename(f, '.ts'); // p. ej. item.es
   const imported = sources.some((src) => src.includes(`/${stem}'`) || src.includes(`/${stem}"`));
   if (!imported) add(f, 'ningún archivo lo importa (¿falta registrarlo en es.ts / en.ts?)');
 }

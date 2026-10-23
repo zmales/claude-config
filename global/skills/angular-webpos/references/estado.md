@@ -8,7 +8,7 @@ src/app/store/<feature>/<entidad>/<entidad>.service.ts    ← HTTP (extiende Bas
 src/app/store/signal-store/<entidad>/<entidad>.store.ts   ← NgRx Signal Store
 ```
 
-Referencias: `store/admin/carrier/` y `store/signal-store/carrier/carrier.store.ts`.
+Plantillas: `assets/plantilla-crud/data/` y `assets/plantilla-crud/store/`.
 
 ## Servicio — `BaseService<T>`
 
@@ -18,37 +18,34 @@ configurada en runtime. **Nunca uses `HttpClient` ni URLs absolutas directamente
 
 ```typescript
 @Injectable({ providedIn: 'root' })
-export class CarrierService extends BaseService<CarrierModel> {
-  constructor(
-    public http: HttpConfigService,
-    protected override dataApi: DataApiService,
-    httpUtils: HttpUtilService,
-    lstore: StoreConfigService,
-    private configService: AppConfigService
-  ) {
-    //   ruta relativa, byCompany (añade /{companyLicCod} en get/getById)
-    super(dataApi, httpUtils, lstore, 'Carrier', false);
+export class ItemService extends BaseService<ItemModel> {
+  constructor(dataApi: DataApiService, httpUtils: HttpUtilService, lstore: StoreConfigService) {
+    super(dataApi, httpUtils, lstore, 'Item', false);   // ruta relativa, byCompany = false
   }
 
-  getByCompany(companyLicCod: string): Observable<CarrierModel[]> {
-    return this.dataApi.get<CarrierModel[]>(`Carrier/company/${companyLicCod}`);
+  getByCompany(companyLicCod: string): Observable<ItemModel[]> {
+    return this.dataApi.get<ItemModel[]>(`Item/company/${companyLicCod}`);
   }
 }
 ```
 
-- Aquí **sí** se usa inyección por constructor: `BaseService` la exige.
+- Aquí **sí** se usa inyección por constructor: `BaseService` la exige. Inyecta solo lo que uses.
 - Tipa siempre la respuesta: `dataApi.get<T>(…)`.
 - Para el API de autenticación pasa `apiType: 'auth'` (ver `ApiType`).
-- La empresa activa se lee de `StoreConfigService`: `lstore.getItem('selectedCompany')?.companyLicCod`.
+- **Empresa explícita en la ruta**: pasa `companyLicCod` como parámetro (`Item/company/{licCod}`). No pongas
+  `byCompany = true`: el `BaseService` lee la empresa de una clave de almacenamiento que puede no coincidir con la
+  que usa la app (revisa el contexto del proyecto) y la URL saldría sin empresa sin dar error.
+- La empresa activa se lee de `StoreConfigService` (`lstore.getItem('selectedCompany')?.companyLicCod`, o la clave
+  que indique el contexto del proyecto).
 
 ## Store — `withEntityCrud`
 
 ```typescript
-export const CarrierStore = signalStore(
+export const ItemStore = signalStore(
   { providedIn: 'root' },
-  withEntityCrud<CarrierModel>(() => inject(CarrierService)),
+  withEntityCrud<ItemModel>(() => inject(ItemService)),
   withMethods((store) => {
-    const service = inject(CarrierService);
+    const service = inject(ItemService);
     return {
       loadByCompany: rxMethod<string>(
         pipe(
@@ -56,9 +53,9 @@ export const CarrierStore = signalStore(
           switchMap((licCod) =>
             service.getByCompany(licCod).pipe(
               tapResponse({
-                next: (entities: CarrierModel[]) =>
+                next: (entities: ItemModel[]) =>
                   patchState(store, { entities, totalCount: entities.length, isLoading: false, isAllLoaded: true, showInitWaitingMessage: false }),
-                error: (error: any) =>
+                error: (error: unknown) =>
                   patchState(store, { error, isLoading: false, showInitWaitingMessage: false }),
               })
             )
@@ -68,7 +65,7 @@ export const CarrierStore = signalStore(
     };
   })
 );
-export type CarrierStoreType = InstanceType<typeof CarrierStore>;
+export type ItemStoreType = InstanceType<typeof ItemStore>;
 ```
 
 - Importa `withEntityCrud` desde `'../base'` y **`tapResponse` desde `'../utils/tap-response'`** (no de `@ngrx/operators`).
@@ -83,30 +80,32 @@ Computed: `selectAll`, `selectTotalCount`, `selectPageLoading`, `selectActionLoa
 `selectCurrentEntity`, `selectError`, `selectUpdated`, `selectById`, `hasEntities`.
 
 Métodos async (`rxMethod`): `loadAll` (con caché: no recarga si hay entidades), `forceLoadAll`, `loadPage(query)`,
-`loadById`, `loadByGuid`, `create`, `createBatch`, `update({ id, entity })`, `delete(id)`, `deleteBatch`.
+`loadById` (limpia `currentEntity` antes de pedir), `loadByGuid`, `create`, `createBatch`, `update({ id, entity })`,
+`delete(id)`, `deleteBatch`.
 
 Síncronos: `clearStore`, `resetStore`, `clearErrors`, `clearLastCreatedId`, `clearUpdated`, `setCurrentEntity`,
 `setSelectedId`, `setLoading`, `setActionsLoading`, `addLocal`, `updateLocal`, `removeLocal`, `setEntities`.
 
 ### Reglas
 
-- `isLoading` = carga de lista; `actionsLoading` = guardar/borrar. No los mezcles.
+- `isLoading` = carga de lista/registro; `actionsLoading` = guardar/borrar. No los mezcles.
 - Al inicio de cada operación async: `patchState(store, { isLoading|actionsLoading: true, error: null })`;
-  en `next` **y** en `error` devuélvelo a `false`.
+  en `next` **y** en `error` devuélvelo a `false`. `tapResponse` en todo `rxMethod`.
 - `switchMap` para cargas (cancela la anterior).
 - `patchState` solo dentro del store, nunca desde el componente.
-- Si el endpoint genérico trae datos de todas las empresas, añade un método `loadByCompany` en lugar de filtrar en el componente.
-- Los stores son singletons (`providedIn: 'root'`): llama `resetStore()` al entrar en la pantalla si no quieres datos de una visita anterior.
+- Si el endpoint genérico trae datos de todas las empresas, añade `loadByCompany` en lugar de filtrar en el componente.
+- Los stores son singletons (`providedIn: 'root'`): llama `resetStore()` al entrar en la pantalla si no quieres datos
+  de una visita anterior.
 - No uses NgRx clásico (actions/reducers/effects) para código nuevo.
 
 ## Consumir en el componente
 
 ```typescript
-carrierStore = inject(CarrierStore);
-private readonly list = this.carrierStore.selectAll;
-loading = this.carrierStore.isLoading;
+readonly itemStore = inject(ItemStore);
+readonly loading = this.itemStore.isLoading;
+readonly displayList = computed(() => this.itemStore.selectAll().map(/* … */));
 ```
 
-En plantilla siempre como función: `loading()`, `list()`.
+En plantilla siempre como función: `loading()`, `displayList()`. No uses `subscribe()` sobre el store.
 El éxito de una acción se detecta con un `effect` que observa `actionsLoading` pasar de `true` a `false` sin `error`
-(ver `deleteResultEffect` en `carrier.component.ts` y `ux.md`). No uses `setTimeout`.
+(ver `ux.md` y la plantilla). No uses `setTimeout`.

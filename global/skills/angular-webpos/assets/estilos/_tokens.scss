@@ -1,0 +1,131 @@
+// ═════════════════════════════════════════════════════════════════════════════
+// TOKENS — custom properties CSS del sistema de diseño
+//
+// Copia literal del bloque `:root{…}` del mockup `webpos-rediseno-A-portlet.html`.
+// Es el ÚNICO archivo del sistema que emite CSS de variables: se importa una
+// sola vez desde `src/styles.scss` para que las custom properties estén
+// disponibles globalmente (también dentro de los estilos "scoped" de Angular,
+// porque las custom properties heredan por el árbol del DOM, no por el ámbito
+// de compilación).
+//
+// El espejo en variables Sass (para `rgba()`, `lighten()`, etc.) vive en
+// `_variables.scss`. Ambos archivos deben mantenerse sincronizados.
+// ═════════════════════════════════════════════════════════════════════════════
+
+:root {
+  // ── Marca — brand-600 sobre blanco = 6,87:1 (AA para texto normal) ─────────
+  --brand-50: #eff6fb;
+  --brand-100: #dcebf6;
+  --brand-200: #b6d5ea;
+  --brand-300: #7fb4d8;
+  --brand-400: #3d8fc2;
+  --brand-500: #1272aa;
+  --brand-600: #0b5e96;
+  --brand-700: #094b79;
+  --brand-800: #083b5f;
+  --brand-900: #072b45;
+  --brand-950: #051e31;
+
+  // ── Neutros ───────────────────────────────────────────────────────────────
+  --n-0: #ffffff;
+  --n-25: #fbfcfd;
+  --n-50: #f6f8f9;
+  --n-100: #edf0f3;
+  --n-200: #e0e5ea;
+  --n-300: #cdd5dc;
+  --n-400: #9faab6;
+  --n-500: #7f8c99;
+  --n-600: #5b6672;
+  --n-700: #404a55;
+  --n-800: #28303a;
+  --n-900: #161c24;
+
+  // ── Semánticos ────────────────────────────────────────────────────────────
+  --ok-50: #e8f6f0;
+  --ok-200: #a9dcc8;
+  --ok-600: #0e7c5a;
+  --ok-700: #0a5f45;
+  --warn-50: #fdf4e7;
+  --warn-200: #f3d5a6;
+  // Amarillo pleno para superficies que deben leerse como "amarillo" sobre el
+  // sidebar oscuro (8,86:1 sobre --brand-950). Solo admite texto oscuro:
+  // --n-900 encima da 8,93:1; el blanco no pasa (1,92:1).
+  --warn-400: #eab308;
+  // El ámbar del mockup (#B25E09) queda en 4,28:1 sobre --warn-50, por debajo
+  // del 4,5:1 de AA para texto normal (`.status--warn`, `.note--warn`). Se
+  // oscurece lo justo para pasar: 4,99:1 sobre --warn-50 y 5,44:1 sobre blanco.
+  --warn-600: #a35507;
+  --err-50: #fdecea;
+  --err-200: #f4b8b2;
+  --err-600: #b42318;
+  --err-700: #912018;
+
+  // ── Roles de texto y borde ────────────────────────────────────────────────
+  --text-strong: var(--n-900);
+  --text: var(--n-800);
+  --text-muted: var(--n-600);
+  // El mockup apunta este rol a --n-500, que sobre blanco da 3,43:1 — no llega
+  // al 4,5:1 de AA y este rol SÍ lleva texto (`.t-eyebrow`, `.datalist__k`, el
+  // pie de página). Se usa un gris algo más oscuro: 5,26:1 sobre blanco y
+  // 4,93:1 sobre --n-50. --n-500 se mantiene intacto para bordes e iconos,
+  // donde el umbral es 3:1.
+  --text-subtle: #646d77;
+  // Placeholders: más claro que --text-muted para que no se confundan con un valor ya escrito.
+  --text-placeholder: var(--n-400);
+
+  --border-control: #7f8c99;
+  --border-divider: var(--n-200);
+  --border-strong: var(--n-300);
+
+  // ── Radios ────────────────────────────────────────────────────────────────
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  // ── Sombras ───────────────────────────────────────────────────────────────
+  --sh-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --sh-sm: 0 1px 3px rgba(16, 24, 40, 0.07), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --sh-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --sh-lg: 0 16px 40px rgba(16, 24, 40, 0.16);
+
+  // ── Espaciado base-4 ──────────────────────────────────────────────────────
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  // ── Escala tipográfica ────────────────────────────────────────────────────
+  --fs-micro: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 28px;
+
+  // ── Alturas de control ────────────────────────────────────────────────────
+  --h-control: 34px;
+  --h-control-sm: 28px;
+  --h-control-lg: 40px;
+
+  // ── Chrome de la aplicación ───────────────────────────────────────────────
+  --sidebar-w: 252px;
+  --sidebar-w-collapsed: 56px;
+  --topbar-h: 56px;
+
+  // ── Puente con Bootstrap ──────────────────────────────────────────────────
+  --bs-primary: var(--brand-600);
+  --bs-body-color: var(--text);
+  --bs-body-bg: var(--n-50);
+  --bs-border-color: var(--border-divider);
+  --bs-font-sans-serif: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+}

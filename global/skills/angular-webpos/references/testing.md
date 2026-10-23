@@ -1,60 +1,54 @@
 # Tests (Jest)
 
 - Runner: **Jest** con `jest-preset-angular` (`jest.config.ts`, setup en `test/setup-jest.ts` con `setupZoneTestEnv()`).
-  No Karma/Jasmine.
+  Nunca Karma/Jasmine (`jest.fn()`, no `jasmine.createSpy()`).
 - Ubicación: carpeta `test/` en la raíz, **espejo de `src/app/`**:
-  `src/app/views/components/admin/carrier/edit-carrier/…` → `test/views/components/admin/carrier/edit-carrier.component.spec.ts`.
-  Varios specs por componente se nombran por tema: `fiscal-docs.reload.spec.ts`, `fiscal-docs.xml-modal.spec.ts`.
-- Alias disponibles: `@app/...`, `@environments/...`.
-- Ejecutar: `npx jest test/views/components/admin/carrier` (o `npm test` para todo).
-- Referencia: `test/views/components/admin/carrier/edit-carrier.component.spec.ts`.
+  `src/app/views/components/<feature>/<entidad>/edit-<entidad>/…` → `test/views/components/<feature>/<entidad>/edit-<entidad>.component.spec.ts`.
+  Varios specs por componente se nombran por tema: `<entidad>.reload.spec.ts`, `<entidad>.xml-modal.spec.ts`.
+- `moduleNameMapper` replica los alias de `tsconfig` (`@app/...`, `@environments/...`); `transformIgnorePatterns`
+  deja pasar los paquetes ESM (`@angular`, `@ngrx`, `@ngx-translate`, `ngx-toastr`, `angular-oauth2-oidc`…).
+  Si añades una dependencia ESM y Jest falla con "Cannot use import statement outside a module", agrégala ahí.
+- Ejecutar: `npx jest <ruta>` (o `npm test` para todo).
+- Plantilla: `assets/plantilla-crud/test/edit-item.component.spec.ts`.
 
 ## Patrón
 
 ```typescript
-describe('EditCarrierComponent', () => {
-  let storeMock: any;
-  let toastr: { success: jest.Mock; error: jest.Mock };
-  let fixture: any;
+describe('EditItemComponent', () => {
+  let store: { currentEntity: WritableSignal<ItemModel | null>; actionsLoading: WritableSignal<boolean>; /* … */ create: jest.Mock };
+  let toastr: { success: jest.Mock; error: jest.Mock; warning: jest.Mock };
+  let fixture: ComponentFixture<EditItemComponent>;
 
-  function create(id: number | null = null) {
-    fixture = TestBed.createComponent(EditCarrierComponent);
-    fixture.componentInstance.carrierId = id;
+  function create(itemId: number | null = null) {
+    fixture = TestBed.createComponent(EditItemComponent);
+    fixture.componentRef.setInput('itemId', itemId);   // inputs de señal: setInput, no asignación
     fixture.detectChanges();
     return fixture.componentInstance;
   }
 
   beforeEach(() => {
     // El store se simula con signals reales: así los effect() del componente reaccionan.
-    storeMock = {
-      entities: signal<any[]>([]),
-      currentEntity: signal<any>(null),
-      isLoading: signal(false),
-      actionsLoading: signal(false),
-      error: signal<any>(null),
-      lastCreatedId: signal<number | null>(null),
-      loadById: jest.fn(), create: jest.fn(), update: jest.fn(), clearErrors: jest.fn(),
-    };
-    toastr = { success: jest.fn(), error: jest.fn() };
-
+    store = { currentEntity: signal(null), actionsLoading: signal(false), /* … */ create: jest.fn() };
     TestBed.configureTestingModule({
-      imports: [EditCarrierComponent],
+      imports: [EditItemComponent],
       providers: [
-        { provide: CarrierStore, useValue: storeMock },
+        { provide: ItemStore, useValue: store },
         { provide: ToastrService, useValue: toastr },
         { provide: TranslateService, useValue: { instant: (k: string) => k } },
         { provide: StoreConfigService, useValue: { getItem: () => ({ companyLicCod: 'LIC1' }) } },
       ],
     });
-    // La lógica vive en la clase: se omite la plantilla para no arrastrar wp-modal, BlockUI, etc.
-    TestBed.overrideComponent(EditCarrierComponent, { set: { template: '', imports: [] } });
+    // La lógica vive en la clase: se omite la plantilla para no arrastrar wp-modal, wpBlockUI, etc.
+    TestBed.overrideComponent(EditItemComponent, { set: { template: '', imports: [] } });
   });
+
+  afterEach(() => jest.clearAllMocks());
 
   it('muestra un solo toast de creación aunque el efecto se reevalúe', () => {
     create();
-    storeMock.lastCreatedId.set(9);
-    storeMock.actionsLoading.set(true);  fixture.detectChanges();
-    storeMock.actionsLoading.set(false); fixture.detectChanges();
+    store.actionsLoading.set(true);  fixture.detectChanges();
+    store.lastCreatedId.set(9);
+    store.actionsLoading.set(false); fixture.detectChanges();
     expect(toastr.success).toHaveBeenCalledTimes(1);
   });
 });
@@ -62,14 +56,12 @@ describe('EditCarrierComponent', () => {
 
 ## Otros casos
 
-- **Servicio sin TestBed**: instancia la clase pasando mocks al constructor (`new CarrierService(httpMock, dataApiMock, …)`)
+- **Servicio sin TestBed**: instancia la clase pasando mocks al constructor (`new ItemService(dataApiMock, httpUtilsMock, lstoreMock)`)
   y verifica la URL/parámetros enviados a `dataApi`.
 - **Guard funcional**: `TestBed.runInInjectionContext(() => authGuard(route, state))` con `PermissionService`/`Router` mockeados.
-- **Store**: `TestBed.inject(CarrierStore)` con el servicio mockeado devolviendo `of(...)`; llama al método y
+- **Store**: `TestBed.inject(ItemStore)` con el servicio mockeado devolviendo `of(...)`; llama al método y
   comprueba `store.entities()`, `store.isLoading()`, `store.error()`.
-- Limpia mocks entre tests (`jest.clearAllMocks()` en `afterEach`) cuando reutilices mocks de módulo.
-- Ejemplos reales de servicios: `test/core/services/` (`api-error.service.spec.ts`, `idle-timer.service.spec.ts`,
-  `permission-service-*.spec.ts`).
+- No uses `HttpClient` real ni `TestBed.inject(HttpClient)`: mockea el servicio de dominio.
 
 ## Qué probar
 
