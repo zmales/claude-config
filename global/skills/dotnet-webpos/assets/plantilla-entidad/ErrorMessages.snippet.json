@@ -1,0 +1,11 @@
+{
+  "_comentario": "FRAGMENTO: copia solo la sección ITEM dentro del objeto raíz de 05-WPApiPortalFeEc.Common/Resources/ErrorMessages.json. La clave de sección y los códigos salen de nameof(Item) en mayúsculas: ITEM_NOT_FOUND lo usa CrudService (404) y es obligatorio; sin él el usuario ve 'Ha ocurrido un error inesperado.'",
+  "ITEM": {
+    "screen": "Ítem",
+    "path": "/admin/item",
+    "errors": {
+      "ITEM_NOT_FOUND": "El ítem solicitado no existe.",
+      "ITEM_DUPLICATE_CODE": "Ya existe un ítem con este código en la empresa."
+    }
+  }
+}

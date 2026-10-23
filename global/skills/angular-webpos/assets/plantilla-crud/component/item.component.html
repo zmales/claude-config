@@ -1,0 +1,34 @@
+<wp-portlet>
+  <wp-portlet-header>
+    <div wpPortletTitle>
+      <h1 class="pane__title">{{ 'ITEM.TITLE' | translate }}</h1>
+      <p class="pane__desc">{{ 'ITEM.DESC' | translate }}</p>
+    </div>
+    <ng-container wpPortletTools>
+      @if (permissionService.canWrite(resource)) {
+        <button type="button" class="btn btn-primary me-2" (click)="add()">
+          <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>{{ 'ITEM.BTN.ADD' | translate }}
+        </button>
+      }
+      @if (permissionService.canExport(resource)) {
+        <wp-export-btn [data]="displayList()" filename="items" [columns]="exportColumns" />
+      }
+    </ng-container>
+  </wp-portlet-header>
+
+  <wp-portlet-body>
+    <!-- La tabla trae su propio loading y su mensaje de vacío: no se envuelve en wpBlockUI. -->
+    <wp-table-common
+      [items]="displayList()"
+      [loading]="loading()"
+      [configColumns]="tableConfig"
+      [entityEditPermission]="resource"
+      [entityDeletePermission]="resource"
+      (onEvent1)="onTableAction($event)"
+    />
+  </wp-portlet-body>
+</wp-portlet>
+
+@if (showModal()) {
+  <wp-edit-item [itemId]="selectedId()" (saved)="closeModal()" (cancelled)="closeModal()" />
+}

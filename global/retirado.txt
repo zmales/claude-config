@@ -1,0 +1,44 @@
+# Rutas relativas a ~/.claude que install.ps1 elimina (previo respaldo zip).
+# Se admiten comodines (*). Una ruta por linea; '#' inicia comentario.
+# Nunca listar: skills/synced, plugins, settings*.json, projects, CLAUDE.md.
+
+# --- Agentes reemplazados por global/agents ---
+agents/agents
+agents/*.bak
+agents/backend-agent.md
+agents/frontend-agent.md
+agents/design-fix-agent.md
+agents/ux-review-agent.md
+agents/documentation-engineer.md
+agents/code.md
+agents/refactor.md
+agents/review.md
+agents/plan.md
+agents/changelog-generator.md
+agents/tooling-engineer.md
+
+# --- Commands duplicados de skills con el mismo nombre ---
+commands/create-commits.md
+commands/create-pull-request.md
+
+# --- Skills absorbidas por angular-webpos / dotnet-webpos / documentacion-webpos ---
+skills/wp-frontend
+skills/wp-backend
+skills/angular-*
+skills/dotnet-*
+skills/code-documentation
+skills/github-documentation
+skills/documentation-templates
+skills/git-workflow
+
+# --- Skills sin uso en WebPOS ---
+skills/python-*
+skills/api-security-best-practices
+skills/software-architecture
+skills/update-policies
+skills/writing-plans
+skills/onboarding
+skills/senior-prompt-engineer
+skills/skill-creation-guide
+skills/skill-developer
+skills/skill-judge

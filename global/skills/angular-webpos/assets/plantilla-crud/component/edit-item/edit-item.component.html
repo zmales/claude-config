@@ -1,0 +1,89 @@
+<wp-modal [title]="title()" (closed)="onClosed()">
+  <!-- Sin overlayColor/spinnerColor: los valores por defecto de la directiva son los del portal. -->
+  <div
+    wpBlockUI
+    [block]="dataLoading() || saving()"
+    [message]="saving() ? ('COMMONS.MESSAGES.SAVING_DATA' | translate) : ('COMMONS.MESSAGES.LOADING_DATA' | translate)"
+  >
+    <form [formGroup]="form" class="px-1 pt-2">
+      <p class="req-legend"><span class="req" aria-hidden="true">*</span>{{ 'ITEM.FORM.REQUIRED_LEGEND' | translate }}</p>
+
+      <div class="row">
+        <div class="col-12 col-md-4 mb-3">
+          <label for="itemCode" class="form-label">
+            {{ 'ITEM.FORM.CODE_LABEL' | translate }}<span class="req" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="itemCode"
+            type="text"
+            class="form-control"
+            formControlName="code"
+            autocomplete="off"
+            required
+            [attr.maxlength]="codeMaxLength"
+            [placeholder]="'ITEM.FORM.CODE_PLACEHOLDER' | translate"
+            [class.is-invalid]="code.invalid && (code.dirty || code.touched)"
+            [attr.aria-invalid]="code.invalid && (code.dirty || code.touched)"
+            [attr.aria-describedby]="code.invalid && (code.dirty || code.touched) ? 'itemCodeError' : null"
+            (blur)="trim('code')"
+          />
+          @if (code.invalid && (code.dirty || code.touched)) {
+            <!-- Un solo mensaje a la vez, del más básico al más específico. -->
+            <div id="itemCodeError" class="invalid-feedback">
+              @if (code.errors?.['required']) {
+                {{ 'ITEM.VALIDATION.CODE_REQUIRED' | translate }}
+              } @else if (code.errors?.['maxlength']) {
+                {{ 'COMMONS.VALIDATION.MAX_LENGTH' | translate: { max: codeMaxLength } }}
+              } @else if (code.errors?.['duplicate']) {
+                {{ 'ITEM.VALIDATION.CODE_DUPLICATE' | translate }}
+              }
+            </div>
+          }
+        </div>
+
+        <div class="col-12 col-md-8 mb-3">
+          <label for="itemName" class="form-label">
+            {{ 'ITEM.FORM.NAME_LABEL' | translate }}<span class="req" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="itemName"
+            type="text"
+            class="form-control"
+            formControlName="name"
+            autocomplete="off"
+            required
+            [attr.maxlength]="nameMaxLength"
+            [placeholder]="'ITEM.FORM.NAME_PLACEHOLDER' | translate"
+            [class.is-invalid]="name.invalid && (name.dirty || name.touched)"
+            [attr.aria-invalid]="name.invalid && (name.dirty || name.touched)"
+            [attr.aria-describedby]="name.invalid && (name.dirty || name.touched) ? 'itemNameError' : null"
+            (blur)="trim('name')"
+          />
+          @if (name.invalid && (name.dirty || name.touched)) {
+            <div id="itemNameError" class="invalid-feedback">
+              @if (name.errors?.['required']) {
+                {{ 'ITEM.VALIDATION.NAME_REQUIRED' | translate }}
+              } @else if (name.errors?.['maxlength']) {
+                {{ 'COMMONS.VALIDATION.MAX_LENGTH' | translate: { max: nameMaxLength } }}
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div wpModalFooter class="d-flex gap-3">
+    <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="cancelled.emit()">
+      {{ 'COMMONS.BUTTONS.CANCEL' | translate }}
+    </button>
+    <button type="button" class="btn btn-primary" [disabled]="form.invalid || saving()" (click)="onSubmit()">
+      @if (saving()) {
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        {{ (isEditMode() ? 'COMMONS.BUTTONS.UPDATING' : 'COMMONS.BUTTONS.SAVING') | translate }}
+      } @else {
+        {{ (isEditMode() ? 'COMMONS.BUTTONS.UPDATE' : 'COMMONS.BUTTONS.SAVE') | translate }}
+      }
+    </button>
+  </div>
+</wp-modal>

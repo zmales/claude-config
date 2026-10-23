@@ -1,0 +1,2 @@
+# Rutas relativas a <repo>/.claude que install.ps1 elimina (previo respaldo zip).
+# Por ahora no hay nada que retirar en este repo.

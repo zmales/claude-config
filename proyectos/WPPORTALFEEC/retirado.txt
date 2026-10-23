@@ -1,0 +1,12 @@
+# Rutas relativas a <repo>/.claude que install.ps1 elimina (previo respaldo zip).
+# Agentes viejos: tenian el mismo nombre que los globales y los tapaban.
+agents/code.md
+agents/refactor.md
+agents/review.md
+
+# Skills genericas reemplazadas por las globales.
+skills/angular-*
+skills/code-documentation
+skills/git-workflow
+skills/update-policies
+skills/writing-plans

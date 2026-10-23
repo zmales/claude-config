@@ -1,0 +1,2473 @@
+// ═════════════════════════════════════════════════════════════════════════════
+// SISTEMA DE DISEÑO — componentes globales
+//
+// Puerto del CSS del mockup `webpos-rediseno-A-portlet.html` (variante A ·
+// portlet). Se emite una sola vez desde `src/styles.scss`, DESPUÉS de
+// Bootstrap, para que estas reglas ganen a las de Bootstrap con la misma
+// especificidad.
+//
+// Además de las clases del mockup (.pane, .block, .subcard, .status, .kpi…),
+// este archivo mapea las clases que YA usa el portal (.btn-secondary,
+// .btn-outline-secondary, .table, .card…) al mismo lenguaje visual, para que
+// las pantallas hereden el rediseño sin reescribir su HTML.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// Este archivo NO usa variables de Sass: todo el color/espaciado sale de las
+// custom properties que emite `_tokens.scss`. Por eso no carga `variables`.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BASE
+// ─────────────────────────────────────────────────────────────────────────────
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--bs-font-sans-serif);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--n-50);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+// Foco visible global — un solo tratamiento para todo lo interactivo.
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+// Números tabulares: columnas de importes y fechas que no bailan al cambiar.
+.tnum,
+.kpi__value,
+.mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-xs);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIPOGRAFÍA — 3 niveles + etiquetas
+// ─────────────────────────────────────────────────────────────────────────────
+// El valor por defecto de <strong>/<b> es `bolder`, que es RELATIVO: dentro de
+// un contenedor a 600 resuelve a 900, un peso que no existe en la escala ni en
+// la fuente. Se fija al tope de la escala para que enfatizar nunca invente un
+// nivel nuevo.
+strong,
+b {
+  font-weight: 600;
+}
+
+// Mismo motivo para el utilitario de Bootstrap: .fw-bold vale 700 y aparece
+// repartido por las plantillas. Se reasigna al tope de la escala en vez de ir
+// quitandolo a mano de cada sitio, que ademas lo dejaria sin enfasis.
+.fw-bold,
+.fw-bolder {
+  font-weight: 600 !important;
+}
+
+.t-card {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  margin: 0;
+}
+
+.t-eyebrow {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  margin: 0;
+}
+
+.t-meta {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.t-label {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--n-700);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PATRÓN DE CONTENEDOR — VARIANTE A · PORTLET
+//
+// · .pane        → la card única de la pantalla
+// · .pane__head  → cabecera con el título DENTRO de la card
+// · .block       → secciones planas dentro del mismo lienzo blanco,
+//                  separadas por divisor y no por tarjetas propias
+//
+// `wp-portlet` / `wp-portlet-header` / `wp-portlet-body` emiten estas mismas
+// clases, así que todas las pantallas del portal usan este patrón.
+// ═════════════════════════════════════════════════════════════════════════════
+.pane {
+  background: var(--n-0);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-xs);
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
+.pane__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  padding: var(--s-4);
+  border-bottom: 1px solid var(--border-divider);
+  background: var(--n-0);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+}
+
+// El título vive dentro de la card: mismo plano que el contenido, así que se
+// mantiene discreto (16 px) para no competir con los datos.
+.pane__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-strong);
+  margin: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.pane__desc {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 3px 0 0;
+}
+
+.pane__head .crumbs {
+  display: none; // sin sitio natural dentro de la card
+}
+
+.pane__actions {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pane__body {
+  padding: var(--s-4);
+
+  // Cuando el cuerpo se compone de bloques, el padding lo pone cada bloque.
+  // Los componentes de tabla son ellos mismos un `.block--table`: su toolbar,
+  // su tabla y su paginación traen su propio aire y van a sangre.
+  &:has(> .block),
+  &:has(> wp-table-common),
+  &:has(> wp-fiscal-doc-table),
+  &:has(> wp-table-documents),
+  // Las pestañas ponen su propio `.block` dentro de cada pestaña: si el cuerpo
+  // también acolchara, el formulario quedaría con el doble de aire.
+  &:has(> wp-navs) {
+    padding: 0;
+  }
+}
+
+// Las secciones comparten el lienzo: se separan con divisor, no con card.
+.block {
+  padding: var(--s-4);
+
+  + .block {
+    border-top: 1px solid var(--border-divider);
+  }
+}
+
+.block--flush {
+  padding: 0;
+
+  + .block--flush {
+    border-top: 0;
+  }
+}
+
+.block__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+
+.block--kpis {
+  background: var(--n-25);
+}
+
+// La toolbar y la tabla quedan pegadas al borde de la card.
+.block--table {
+  padding: 0;
+
+  + .block--table {
+    border-top: 0;
+  }
+}
+
+// Los componentes de tabla son ellos mismos un bloque a sangre: si vienen
+// después de otro `.block`, les toca el mismo divisor que separaría dos bloques.
+.block + wp-table-common,
+.block + wp-fiscal-doc-table,
+.block + wp-table-documents {
+  display: block;
+  border-top: 1px solid var(--border-divider);
+}
+
+// Envoltorio de página: margen exterior del contenido del router.
+.page {
+  padding: var(--s-6);
+  max-width: 1560px;
+  width: 100%;
+}
+
+.crumbs {
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+  margin-bottom: var(--s-2);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+
+  i {
+    font-size: 9px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUB-TARJETAS — secciones de formulario dentro de un .block
+// ─────────────────────────────────────────────────────────────────────────────
+.subcard {
+  background: var(--n-0);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  overflow: hidden;
+
+  + .subcard {
+    margin-top: var(--s-3);
+  }
+}
+
+.subcard__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-4);
+  min-height: 44px;
+  background: var(--n-50);
+  border-bottom: 1px solid var(--border-divider);
+
+  .t-card {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+
+    > i {
+      font-size: 15px;
+      color: var(--brand-600);
+    }
+  }
+}
+
+.subcard__tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.subcard__body {
+  padding: var(--s-4);
+}
+
+.count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--r-sm);
+  background: var(--n-100);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.fieldset {
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  overflow: hidden;
+
+  // El bloqueo real lo hace el atributo `disabled` de cada control; esto es
+  // sólo la señal visual de que el grupo entero no está en juego.
+  &.is-disabled {
+    opacity: 0.55;
+
+    .fieldset__body {
+      pointer-events: none;
+    }
+  }
+
+  &__head {
+    padding: 10px var(--s-3);
+    background: var(--n-50);
+    border-bottom: 1px solid var(--border-divider);
+  }
+
+  &__body {
+    padding: var(--s-3);
+  }
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-divider);
+  margin: var(--s-5) 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOTONES — altura fija (--h-control) en lugar de padding vertical
+//
+// Se mapean también las variantes que ya usa el portal:
+//   .btn-secondary / .btn-outline-secondary / .btn-light  → .btn-default
+//   .btn-clean / .btn-link                                → .btn-ghost
+//   .btn-light-danger / .btn-outline-danger               → .btn-danger-soft
+// ─────────────────────────────────────────────────────────────────────────────
+.btn {
+  height: var(--h-control);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--s-3);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+
+  i {
+    font-size: 14px;
+    line-height: 1;
+  }
+}
+
+// `.btn-group-sm > .btn` se lista a mano: Bootstrap lo declara con
+// `@extend .btn-sm`, y con el sistema de módulos esa extensión ya no alcanza a
+// las reglas de este archivo (solo afecta al módulo donde se escribe y a los
+// que este carga). Ídem para `.btn-group-lg > .btn`.
+.btn-sm,
+.btn-group-sm > .btn {
+  height: var(--h-control-sm);
+  font-size: var(--fs-xs);
+  padding: 0 10px;
+
+  i {
+    font-size: 13px;
+  }
+}
+
+.btn-lg,
+.btn-group-lg > .btn {
+  height: var(--h-control-lg);
+  font-size: var(--fs-base);
+  padding: 0 var(--s-4);
+}
+
+.btn-primary {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  color: #fff;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--brand-700);
+    border-color: var(--brand-700);
+    color: #fff;
+  }
+}
+
+.btn-outline-primary {
+  background: var(--n-0);
+  border-color: var(--brand-600);
+  color: var(--brand-700);
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--brand-50);
+    border-color: var(--brand-700);
+    color: var(--brand-800);
+  }
+}
+
+.btn-default,
+.btn-secondary,
+.btn-outline-secondary,
+.btn-light,
+.btn-light-secondary {
+  background: var(--n-0);
+  border-color: var(--border-strong);
+  color: var(--n-700);
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--n-50);
+    border-color: var(--border-control);
+    color: var(--text);
+  }
+}
+
+.btn-ghost,
+.btn-clean,
+.btn-link {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+  text-decoration: none;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--n-100);
+    color: var(--text);
+    text-decoration: none;
+  }
+}
+
+.btn-danger-soft,
+.btn-light-danger,
+.btn-outline-danger {
+  background: var(--n-0);
+  border-color: var(--err-200);
+  color: var(--err-600);
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--err-50);
+    border-color: var(--err-600);
+    color: var(--err-700);
+  }
+}
+
+.btn-danger {
+  background: var(--err-600);
+  border-color: var(--err-600);
+  color: #fff;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--err-700);
+    border-color: var(--err-700);
+    color: #fff;
+  }
+}
+
+.btn-success {
+  background: var(--ok-600);
+  border-color: var(--ok-600);
+  color: #fff;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--ok-700);
+    border-color: var(--ok-700);
+    color: #fff;
+  }
+}
+
+.btn-light-primary,
+.btn-active-light-primary {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-700);
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--brand-100);
+    border-color: var(--brand-300);
+    color: var(--brand-800);
+  }
+}
+
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-group-tight {
+  display: inline-flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+// Botón cuadrado de sólo icono.
+.icon-btn,
+.btn-icon {
+  width: var(--h-control-sm);
+  height: var(--h-control-sm);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--n-100);
+    color: var(--text);
+  }
+}
+
+.icon-btn--sm {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+
+.icon-btn--danger:hover {
+  background: var(--err-50);
+  color: var(--err-600);
+}
+
+// Botones de creación rápida (+ Factura, + Nota de Crédito…)
+.quick-actions {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.quick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--h-control);
+  padding: 0 var(--s-3);
+  background: var(--n-0);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--n-700);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    border-color: var(--brand-600);
+    color: var(--brand-700);
+    background: var(--brand-50);
+  }
+
+  i {
+    font-size: 13px;
+    color: var(--brand-600);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESTADOS, ETIQUETAS Y CHIPS
+// ─────────────────────────────────────────────────────────────────────────────
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px 0 7px;
+  border-radius: var(--r-pill);
+  border: 1px solid;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: currentColor;
+    flex: 0 0 6px;
+  }
+}
+
+.status--ok {
+  color: var(--ok-700);
+  background: var(--ok-50);
+  border-color: var(--ok-200);
+}
+
+.status--err {
+  color: var(--err-600);
+  background: var(--err-50);
+  border-color: var(--err-200);
+}
+
+.status--warn {
+  color: var(--warn-600);
+  background: var(--warn-50);
+  border-color: var(--warn-200);
+}
+
+.status--neutral {
+  color: var(--n-600);
+  background: var(--n-50);
+  border-color: var(--n-200);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-divider);
+  background: var(--n-0);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tag--brand {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-700);
+}
+
+// Iniciales de una persona o compañía — en la barra superior y en las tablas.
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  background: var(--brand-600);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  flex: 0 0 24px;
+}
+
+.chips {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+// Variante informativa: dice qué criterio está aplicado, no ofrece quitarlo.
+// Sin el hueco que el chip normal reserva para su botón de cerrar, y en gris
+// para que no se lea como algo pulsable.
+.chip--static {
+  padding-right: 9px;
+  border-color: var(--border-divider);
+  background: var(--n-50);
+  color: var(--text);
+  cursor: default;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 4px 0 9px;
+  border: 1px solid var(--brand-200);
+  background: var(--brand-50);
+  color: var(--brand-800);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  white-space: nowrap;
+
+  &__x {
+    width: 16px;
+    height: 16px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: none;
+    color: var(--brand-700);
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    font-size: 9px;
+    padding: 0;
+
+    &:hover {
+      background: var(--brand-200);
+      color: var(--brand-800);
+    }
+  }
+}
+
+// Bootstrap `.badge` → mismo lenguaje que `.status`, sin el punto de color.
+.badge {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  padding: 3px 8px;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KPI
+// ─────────────────────────────────────────────────────────────────────────────
+.kpi {
+  background: var(--n-0);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  height: 100%;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  // El punto de color es lo único que tiñe el KPI: el número se queda en el
+  // tono de texto fuerte para que compare bien entre tarjetas.
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    flex: 0 0 7px;
+
+    &--brand {
+      background: var(--brand-600);
+    }
+
+    &--ok {
+      background: var(--ok-600);
+    }
+
+    &--err {
+      background: var(--err-600);
+    }
+
+    &--warn {
+      background: var(--warn-600);
+    }
+  }
+
+  &__value {
+    font-size: var(--fs-3xl);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-strong);
+    letter-spacing: -0.02em;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-2);
+  }
+
+  &__delta {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  // El KPI que encabeza un desglose: se despega del resto con el tono de marca
+  // para que el importe principal se lea antes que los conceptos.
+  &--highlight {
+    background: var(--brand-50);
+    border-color: var(--brand-200);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMULARIOS
+// ─────────────────────────────────────────────────────────────────────────────
+.field {
+  margin-bottom: var(--s-4);
+
+  > label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--n-700);
+    margin-bottom: 5px;
+  }
+}
+
+.req {
+  color: var(--err-600);
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.req-legend {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: var(--s-4);
+}
+
+// Todas las etiquetas de campo comparten nivel, lleven .form-label,
+// .col-form-label o ninguna clase: el portal mezcla las tres formas y cada una
+// caía en un tamaño distinto, que es lo que descuadraba la jerarquía.
+// Se excluyen las de checkbox/switch (texto de opción, no etiqueta de campo),
+// las de sólo lectores de pantalla y las de wp-navs, que usa <label> como
+// pestaña: ésa es del nivel .tabs__item (13/500), no de etiqueta de campo.
+.form-label,
+.col-form-label,
+.field > label,
+.block label:not(.form-check-label):not(.visually-hidden):not(.btn):not(.tabs *),
+.subcard__body label:not(.form-check-label):not(.visually-hidden):not(.btn):not(.tabs *),
+.modal-body label:not(.form-check-label):not(.visually-hidden):not(.btn):not(.tabs *) {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--n-700);
+  margin-bottom: 5px;
+}
+
+.form-control,
+.form-select {
+  height: var(--h-control);
+  padding: 0 10px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background-color: var(--n-0);
+  border: 1px solid var(--border-control);
+  border-radius: var(--r-sm);
+  box-shadow: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+
+  &:hover {
+    border-color: var(--n-600);
+  }
+
+  &:focus {
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 3px rgba(11, 94, 150, 0.14);
+    outline: none;
+  }
+
+  &:disabled,
+  &[readonly] {
+    background-color: var(--n-50);
+    color: var(--text-muted);
+  }
+}
+
+textarea.form-control {
+  height: auto;
+  padding: 8px 10px;
+  min-height: 72px;
+}
+
+// Input de archivo: Bootstrap le da al botón "Elegir archivo" un margen negativo igual al
+// padding vertical de .form-control (.375rem). Aquí ese padding es 0 y la altura fija, así que
+// el botón quedaba subido 6px y el nombre del archivo pegado arriba. Se centra con line-height y
+// el botón ocupa todo el alto, pegado al borde izquierdo.
+.form-control[type='file'] {
+  padding: 0 10px 0 0;
+  line-height: calc(var(--h-control) - 2px);
+  overflow: hidden;
+
+  &::file-selector-button {
+    height: 100%;
+    margin: 0 10px 0 0;
+    padding: 0 12px;
+    line-height: inherit;
+    color: var(--text);
+    background-color: var(--n-50);
+    border: 0;
+    border-inline-end: 1px solid var(--border-control);
+    border-radius: 0;
+  }
+
+  &:hover:not(:disabled):not([readonly])::file-selector-button {
+    background-color: var(--n-100);
+  }
+}
+
+.form-select {
+  padding-right: 30px;
+  background-position: right 10px center;
+}
+
+.form-control::placeholder {
+  color: var(--text-placeholder);
+  opacity: 1;
+}
+
+.form-text {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin-top: 5px;
+  display: block;
+}
+
+.form-control-sm,
+.form-select-sm {
+  height: var(--h-control-sm);
+  font-size: var(--fs-xs);
+}
+
+// `form-control-lg` mezclado con `form-control` daba dos alturas distintas en
+// la misma fila: se alinea con la altura grande del sistema.
+.form-control-lg,
+.form-select-lg {
+  height: var(--h-control-lg);
+  font-size: var(--fs-base);
+}
+
+.input-group {
+  > .form-control,
+  > .form-select,
+  .btn {
+    height: var(--h-control);
+  }
+}
+
+.input-group-text {
+  height: var(--h-control);
+  padding: 0 10px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  background: var(--n-50);
+  border: 1px solid var(--border-control);
+  border-radius: var(--r-sm);
+}
+
+.invalid-feedback {
+  font-size: var(--fs-xs);
+  color: var(--err-600);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid,
+.ng-submitted .ng-invalid.form-control,
+.ng-submitted .ng-invalid.form-select {
+  border-color: var(--err-600);
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.14);
+  }
+}
+
+// Icono de ayuda junto a la etiqueta.
+.hint {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-pill);
+  color: var(--n-400);
+  font-size: 12px;
+  cursor: help;
+  vertical-align: -2px;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--brand-600);
+    background: var(--brand-50);
+  }
+}
+
+.filedrop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--n-25);
+
+  &:hover {
+    border-color: var(--brand-400);
+    background: var(--brand-50);
+  }
+
+  &__icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: var(--r-sm);
+    background: var(--n-0);
+    border: 1px solid var(--border-divider);
+    display: grid;
+    place-items: center;
+    color: var(--brand-600);
+    font-size: 16px;
+  }
+}
+
+.form-switch .form-check-input {
+  width: 34px;
+  height: 19px;
+  margin-top: 0;
+  background-color: var(--n-0);
+  border: 1px solid var(--border-control);
+  cursor: pointer;
+  box-shadow: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%237F8C99'/%3e%3c/svg%3e");
+
+  &:checked {
+    background-color: var(--brand-600);
+    border-color: var(--brand-600);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(11, 94, 150, 0.14);
+    border-color: var(--brand-600);
+  }
+}
+
+.form-check-input {
+  border-color: var(--border-control);
+
+  &:checked {
+    background-color: var(--brand-600);
+    border-color: var(--brand-600);
+  }
+}
+
+.form-check-label {
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+
+// Separa el texto del interruptor: el padding de Bootstrap lo deja pegado.
+.form-switch .form-check-label {
+  margin-left: var(--s-2);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+
+  .form-check-input {
+    flex: 0 0 34px;
+  }
+}
+
+// Rejilla de formulario a 2 columnas.
+.g-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 var(--s-4);
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+
+    .span-2 {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTROS
+// ─────────────────────────────────────────────────────────────────────────────
+.filters__row {
+  display: flex;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filters__field {
+  flex: 1 1 200px;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+// El término de búsqueda es un criterio de la consulta, no un filtro local:
+// va con el resto de filtros y pesa más porque es el que más se usa.
+.filters__field--wide {
+  flex: 2 1 340px;
+  max-width: none;
+}
+
+// El rango de fechas lleva DOS inputs nativos mas el separador dentro del mismo
+// campo. Con el ancho normal de un filtro (tope de 260px) cada fecha se quedaba
+// en unos 110px y el navegador recortaba el patron: se leia "09/13/" en lugar de
+// la fecha completa. 320px dejan las dos fechas enteras y la flecha.
+.filters__field--range {
+  flex: 1 1 320px;
+  max-width: none;
+}
+
+.filters__actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.search {
+  position: relative;
+  flex: 1 1 260px;
+  max-width: 340px;
+
+  i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--n-500);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  .form-control {
+    padding-left: 30px;
+  }
+}
+
+.field .search {
+  flex: 1 1 auto;
+  max-width: none;
+  width: 100%;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLAS — `.tbl` del mockup y `.table` de Bootstrap comparten tratamiento
+// ─────────────────────────────────────────────────────────────────────────────
+.tbl-wrap,
+.table-responsive,
+.table-scroll-top {
+  overflow-x: auto;
+
+  // Las tres barras de una tabla —la de arriba, la de abajo y la de cualquier
+  // otro contenedor con scroll— tienen que verse idénticas: aparecen juntas en
+  // la misma pantalla y la nativa de Windows trae flechas en los extremos y un
+  // grosor distinto, así que se dibujan aquí una sola vez.
+  scrollbar-width: thin;
+  scrollbar-color: var(--n-400) var(--n-100);
+
+  &::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  // Sin esto, en Windows la barra nativa añade una flecha en cada extremo y la
+  // dibujada a mano no, que es justo lo que las hacía distintas.
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--n-100);
+    border-radius: var(--r-pill);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--n-400);
+    border-radius: var(--r-pill);
+
+    &:hover {
+      background: var(--n-500);
+    }
+  }
+}
+
+// Barra de desplazamiento espejo, encima de la tabla.
+//
+// Una tabla ancha sólo trae su barra al pie: para moverla hay que bajar hasta el
+// final, desplazar y volver a subir. Ésta repite el mismo recorrido arriba y va
+// sincronizada con la de abajo (wpHScrollSync), así que se puede desplazar desde
+// donde se esté mirando.
+//
+// El riel interior no lleva contenido: su único cometido es medir lo mismo que
+// el contenido real de la tabla para que la barra tenga el recorrido correcto.
+// La directiva le fija el ancho y oculta el conjunto cuando la tabla cabe.
+.table-scroll-top {
+  overflow-y: hidden;
+  // Sin altura propia el contenedor colapsa y la barra no se ve; el riel de 1px
+  // sólo aporta el ancho. El aspecto de la barra lo da la regla compartida de
+  // más abajo, para que sea la misma que la del pie de la tabla.
+  height: 12px;
+
+  &__rail {
+    height: 1px;
+  }
+}
+
+.tbl,
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-sm);
+  margin-bottom: 0;
+  color: var(--text);
+
+  thead th {
+    background: var(--n-50);
+    padding: 0 var(--s-3);
+    height: 38px;
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-align: left;
+    white-space: nowrap;
+    border-top: 1px solid var(--border-divider);
+    border-bottom: 1px solid var(--border-divider);
+    vertical-align: middle;
+  }
+
+  tbody td {
+    padding: 10px var(--s-3);
+    border-bottom: 1px solid var(--n-100);
+    border-top: 0;
+    vertical-align: middle;
+    color: var(--text);
+    background: transparent;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover td {
+    background: var(--n-25);
+  }
+
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .t-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit;
+    text-decoration: none;
+
+    i {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+  }
+}
+
+// `.table-bordered` dibuja rejilla en cada celda con las variables de Bootstrap,
+// que asumen `border-collapse: collapse`: con `separate` saldrían líneas dobles.
+.table-bordered {
+  border-collapse: collapse;
+}
+
+.cell-main {
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+
+  &.tnum {
+    white-space: nowrap;
+  }
+}
+
+// Tipo de documento: es lo que identifica la fila, así que va en semibold.
+.cell-doctype {
+  font-weight: 600;
+  color: var(--text-strong);
+  line-height: 1.35;
+}
+
+.cell-sub {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin-top: 1px;
+
+  &.tnum {
+    white-space: nowrap;
+  }
+}
+
+.cell-total {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-link {
+  font-size: var(--fs-xs);
+  color: var(--brand-700);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: flex-end;
+}
+
+.truncate {
+  max-width: 148px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGINACIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--border-divider);
+  flex-wrap: wrap;
+
+  &__info {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+
+    strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    flex-wrap: wrap;
+  }
+
+  &__size {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  &__pages {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+}
+
+.pg {
+  min-width: var(--h-control-sm);
+  height: var(--h-control-sm);
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--n-100);
+    color: var(--text);
+  }
+
+  &--on {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: #fff;
+
+    &:hover {
+      background: var(--brand-700);
+      color: #fff;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Paginación de Bootstrap → mismo lenguaje que `.pg`.
+.pagination {
+  gap: 2px;
+  margin-bottom: 0;
+
+  .page-link {
+    min-width: var(--h-control-sm);
+    height: var(--h-control-sm);
+    padding: 0 6px;
+    display: grid;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+
+    &:hover {
+      background: var(--n-100);
+      color: var(--text);
+    }
+  }
+
+  .page-item.active .page-link {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: #fff;
+  }
+
+  .page-item.disabled .page-link {
+    opacity: 0.4;
+    background: transparent;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PESTAÑAS / ACORDEÓN / AVISOS / VACÍOS
+// ─────────────────────────────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: var(--s-1);
+  border-bottom: 1px solid var(--border-divider);
+  margin-bottom: var(--s-4);
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 var(--s-3);
+    height: 38px;
+    margin-bottom: -1px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+    border-radius: 0;
+    cursor: pointer;
+
+    i {
+      font-size: 14px;
+    }
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &--on,
+    &.active {
+      color: var(--brand-700);
+      border-bottom-color: var(--brand-600);
+      font-weight: 600;
+    }
+
+    &.active .count-chip {
+      background: var(--brand-100);
+      color: var(--brand-700);
+    }
+  }
+}
+
+// `.nav-tabs` de Bootstrap → mismo tratamiento visual que `.tabs`.
+.nav-tabs {
+  border-bottom: 1px solid var(--border-divider);
+  gap: var(--s-1);
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 var(--s-3);
+    height: 38px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+
+    &:hover {
+      color: var(--text);
+      border-color: transparent;
+      border-bottom-color: var(--border-strong);
+    }
+
+    &.active {
+      color: var(--brand-700);
+      background: transparent;
+      border-bottom-color: var(--brand-600);
+      font-weight: 600;
+    }
+  }
+}
+
+.acc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+
+  &__item {
+    background: var(--n-0);
+    border: 1px solid var(--border-divider);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    width: 100%;
+    padding: 0 var(--s-4);
+    height: 50px;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--n-25);
+    }
+
+    &[aria-expanded='true'] {
+      border-bottom: 1px solid var(--border-divider);
+    }
+
+    &[aria-expanded='true'] .acc__chev {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__ico {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: var(--r-sm);
+    background: var(--brand-50);
+    color: var(--brand-600);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+  }
+
+  &__title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  &__chev {
+    margin-left: auto;
+    color: var(--n-500);
+    font-size: 12px;
+    transition: transform 0.15s;
+  }
+}
+
+.note,
+.alert {
+  display: flex;
+  gap: 10px;
+  padding: var(--s-3);
+  border: 1px solid;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  margin-bottom: 0;
+
+  i {
+    font-size: 15px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+}
+
+.note--info,
+.alert-info,
+.alert-primary {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-800);
+}
+
+.note--err,
+.alert-danger {
+  background: var(--err-50);
+  border-color: var(--err-200);
+  color: var(--err-700);
+}
+
+.note--warn,
+.alert-warning {
+  background: var(--warn-50);
+  border-color: var(--warn-200);
+  color: var(--warn-600);
+}
+
+.note--ok,
+.alert-success {
+  background: var(--ok-50);
+  border-color: var(--ok-200);
+  color: var(--ok-700);
+}
+
+.empty {
+  padding: var(--s-10) var(--s-6);
+  text-align: center;
+
+  &__ico {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto var(--s-3);
+    border-radius: var(--r-md);
+    background: var(--n-100);
+    color: var(--n-500);
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+  }
+
+  &__title {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 var(--s-1);
+  }
+
+  &__desc {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin: 0 auto var(--s-4);
+    max-width: 380px;
+  }
+}
+
+// Estado inicial: la tabla no consulta hasta que el usuario pulsa Buscar.
+.prompt {
+  padding: var(--s-10) var(--s-6);
+  text-align: center;
+
+  &__ico {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto var(--s-3);
+    border-radius: var(--r-md);
+    background: var(--brand-50);
+    color: var(--brand-600);
+    display: grid;
+    place-items: center;
+    font-size: 21px;
+  }
+
+  &__title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 var(--s-1);
+  }
+
+  &__desc {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin: 0 auto var(--s-4);
+    max-width: 420px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTRAPARTE / FICHAS DE DATOS / IMPORTES
+// ─────────────────────────────────────────────────────────────────────────────
+.counterpart {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  background: var(--n-25);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+
+  &__avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: var(--r-pill);
+    background: var(--brand-50);
+    color: var(--brand-700);
+    border: 1px solid var(--brand-200);
+    display: grid;
+    place-items: center;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+}
+
+// Ficha de datos: pares etiqueta/valor legibles sin ser un formulario.
+.datalist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+
+  @media (min-width: 576px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 var(--s-4);
+  }
+
+  &__item {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--n-100);
+  }
+
+  &__k {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-subtle);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  &__v {
+    font-size: var(--fs-sm);
+    color: var(--text);
+
+    &--empty {
+      color: var(--text-muted);
+    }
+  }
+}
+
+// ── Documentación del propio sistema (muestrarios de color y radio) ─────────
+.sw {
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--n-0);
+
+  &__chip {
+    height: 48px;
+  }
+
+  &__meta {
+    padding: 7px 9px;
+    border-top: 1px solid var(--border-divider);
+  }
+
+  &__name {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  &__hex {
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    font-family: ui-monospace, monospace;
+  }
+}
+
+.radii-demo {
+  display: flex;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+
+  > div {
+    width: 60px;
+    height: 60px;
+    background: var(--brand-50);
+    border: 1px solid var(--brand-200);
+    display: grid;
+    place-items: center;
+    font-size: var(--fs-micro);
+    color: var(--brand-700);
+    font-weight: 600;
+  }
+}
+
+.spec {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: var(--s-3);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--n-100);
+  font-size: var(--fs-sm);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__k {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    padding-top: 2px;
+  }
+}
+
+// Lista dinámica de conceptos: desglose de celda, popover y modal de Totales.
+.amounts {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  &__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: 5px 0;
+    font-size: var(--fs-sm);
+
+    + .amounts__row {
+      border-top: 1px solid var(--n-100);
+    }
+  }
+
+  &__label {
+    color: var(--text-muted);
+    min-width: 0;
+  }
+
+  &__value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--text);
+  }
+
+  &__row--neg &__value {
+    color: var(--err-600);
+  }
+
+  // El total rompe la lista: fondo, borde superior marcado y cuerpo mayor.
+  &__row--total {
+    margin-top: var(--s-2);
+    padding: 10px var(--s-3);
+    border-top: 2px solid var(--border-strong);
+    background: var(--n-50);
+    border-radius: var(--r-sm);
+
+    .amounts__label {
+      color: var(--text);
+      font-weight: 600;
+      font-size: var(--fs-sm);
+    }
+
+    .amounts__value {
+      font-size: var(--fs-md);
+      font-weight: 600;
+      color: var(--text-strong);
+    }
+  }
+
+  &__group {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-subtle);
+    padding: var(--s-3) 0 var(--s-1);
+  }
+
+  &__row--sub .amounts__label {
+    padding-left: var(--s-3);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 8px;
+      width: 4px;
+      height: 1px;
+      background: var(--n-300);
+    }
+  }
+}
+
+// Celda de total con desglose: el número manda, el disparador es secundario.
+.total-cell {
+  // Dos líneas apiladas y alineadas a la derecha, como el resto de la columna de
+  // importes: el total arriba y el IVA debajo.
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  justify-content: flex-end;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+
+  &__value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Segunda línea: el mismo nivel que cualquier dato secundario de celda.
+  &__tax {
+    font-size: var(--fs-xs);
+    font-weight: 400;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &:hover &__value,
+  &:focus-visible &__value {
+    color: var(--brand-700);
+  }
+
+  &:hover &__value {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+}
+
+.mailcell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// Clave de acceso truncada pero copiable.
+.akey {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &__text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    max-width: 132px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--brand-700);
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESUMEN / LISTA DE MENÚS
+// ─────────────────────────────────────────────────────────────────────────────
+.company-logo {
+  position: relative;
+  flex: 0 0 auto;
+  padding: var(--s-3);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  background: var(--n-0);
+
+  &__edit {
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    background: var(--n-0);
+    border: 1px solid var(--border-divider);
+    box-shadow: var(--sh-xs);
+
+    &:hover {
+      background: var(--brand-50);
+      color: var(--brand-600);
+      border-color: var(--brand-200);
+    }
+  }
+}
+
+// Acceso rápido: tarjeta accionable, no un enlace suelto.
+.quick-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  height: 100%;
+  padding: var(--s-3);
+  text-align: left;
+  cursor: pointer;
+  background: var(--n-0);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-xs);
+  transition: border-color 0.12s, box-shadow 0.12s, background 0.12s;
+
+  &:hover {
+    border-color: var(--brand-300);
+    box-shadow: var(--sh-sm);
+    background: var(--brand-50);
+  }
+
+  &__ico {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: var(--r-md);
+    background: var(--brand-50);
+    color: var(--brand-600);
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+  }
+
+  &:hover &__ico {
+    background: var(--brand-100);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  &__desc {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+}
+
+// Lista de menús: jerarquía por indentación + rail, sin flecha suelta.
+.mrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+
+  &--child {
+    padding-left: var(--s-5);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 50%;
+      width: 9px;
+      height: 1px;
+      background: var(--n-300);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: -14px;
+      bottom: 50%;
+      width: 1px;
+      background: var(--n-300);
+    }
+  }
+
+  &__ico {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border-radius: var(--r-sm);
+    background: var(--n-100);
+    color: var(--text-muted);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+  }
+
+  &--parent &__ico {
+    background: var(--brand-50);
+    color: var(--brand-600);
+  }
+
+  &__title {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  &--parent &__title {
+    font-weight: 600;
+  }
+
+  // El desplegable va pegado al nombre del menú, no suelto en la columna.
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 20px;
+    padding: 0 7px;
+    border: 1px solid var(--border-divider);
+    background: var(--n-50);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+
+    &:hover,
+    &[aria-expanded='true'] {
+      background: var(--brand-50);
+      border-color: var(--brand-200);
+      color: var(--brand-700);
+    }
+
+    i {
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+
+    &[aria-expanded='true'] i {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// Colapsar una fila de tabla no admite animación de altura: se hace en seco.
+tr.collapsing {
+  transition: none;
+  height: auto !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAPAS FLOTANTES — dropdown, modal, popover, tooltip
+// ─────────────────────────────────────────────────────────────────────────────
+.dropdown-menu {
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-md);
+  padding: var(--s-1);
+  min-width: 208px;
+  font-size: var(--fs-sm);
+}
+
+.dropdown-header {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  padding: 6px var(--s-3) 4px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px var(--s-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  border: 0;
+  background: none;
+  width: 100%;
+  text-align: left;
+
+  i {
+    font-size: 14px;
+    color: var(--text-muted);
+    width: 16px;
+    text-align: center;
+  }
+
+  &:hover,
+  &:focus {
+    background: var(--n-100);
+    color: var(--text);
+  }
+
+  &:hover i {
+    color: var(--brand-600);
+  }
+}
+
+.dropdown-item--danger {
+  color: var(--err-600);
+
+  i {
+    color: var(--err-600);
+  }
+
+  &:hover,
+  &:focus {
+    background: var(--err-50);
+    color: var(--err-700);
+
+    i {
+      color: var(--err-700);
+    }
+  }
+}
+
+.dropdown-divider {
+  margin: var(--s-1) 0;
+  border-color: var(--border-divider);
+}
+
+.modal-content {
+  border: 0;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  // `--bs-modal-margin` es el margen que Bootstrap deja alrededor del diálogo
+  // (0,5rem, y 1,75rem a partir de `sm`): descontarlo dos veces da el alto
+  // máximo exacto. `100dvh` descuenta la barra del navegador en móvil;
+  // `100vh` queda de reserva para quien no soporte `dvh`.
+  //
+  // Los modales que ya declaran `modal-dialog-scrollable` traen su propio
+  // `max-height` con más especificidad y siguen comportándose igual.
+  max-height: calc(100vh - var(--bs-modal-margin, 0.5rem) * 2);
+  max-height: calc(100dvh - var(--bs-modal-margin, 0.5rem) * 2);
+}
+
+.modal-header {
+  padding: var(--s-4);
+  border-bottom: 1px solid var(--border-divider);
+  align-items: flex-start;
+}
+
+.modal-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.modal-body {
+  padding: var(--s-4);
+  // Con el alto del diálogo acotado, es el cuerpo el que se desplaza.
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--border-divider);
+  background: var(--n-25);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  gap: var(--s-2);
+}
+
+.modal-backdrop.show {
+  opacity: 0.45;
+}
+
+.popover {
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-md);
+  font-family: inherit;
+  max-width: 320px;
+}
+
+// Los popovers de las tablas de documentos (desglose del total, clave de
+// acceso) se montan con `container="body"`: así escapan del `overflow: auto`
+// de .fd-table-container, que antes los recortaba contra el borde de la
+// tarjeta. Al salir del flujo hace falta fijar la capa explícitamente, por
+// encima de la barra lateral (1000) y de la cabecera fija.
+.fd-popover {
+  z-index: 1080;
+}
+
+.popover-header {
+  background: var(--n-50);
+  border-bottom: 1px solid var(--border-divider);
+  padding: 8px var(--s-3);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+}
+
+.popover-body {
+  padding: var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+
+.popover .accesskey {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-xs);
+  line-height: 1.7;
+  word-break: break-all;
+  color: var(--text);
+  background: var(--n-50);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-sm);
+  padding: 8px;
+  display: block;
+}
+
+.tooltip-inner {
+  font-size: var(--fs-xs);
+  background: var(--n-900);
+  border-radius: var(--r-sm);
+  padding: 6px 9px;
+  max-width: 240px;
+  text-align: left;
+}
+
+.tooltip.show {
+  opacity: 1;
+}
+
+.tooltip .tooltip-arrow::before {
+  border-top-color: var(--n-900);
+  border-bottom-color: var(--n-900);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SWEETALERT2 — `customClass: { popup: 'wp-swal', ... }` + `buttonsStyling: false`
+// (ver `SWAL_THEME` en generate-documents.component.ts)
+// Por defecto SweetAlert escala en `em` desde 16px (título ~30px, texto 18px), que
+// desentona con los modales del portal. Esta variante lo lleva a la misma escala
+// que `.modal-title` / `.modal-body`. Es opt-in para no alterar los diálogos que
+// todavía no se revisaron.
+// ─────────────────────────────────────────────────────────────────────────────
+.wp-swal {
+  width: 28rem;
+  max-width: calc(100vw - var(--s-8));
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--r-lg);
+  font-family: inherit;
+
+  .swal2-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto var(--s-3);
+    border-width: 0.2rem;
+
+    .swal2-icon-content {
+      font-size: 2.25rem;
+    }
+  }
+
+  .swal2-title {
+    padding: 0 var(--s-2);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-strong);
+    letter-spacing: -0.01em;
+  }
+
+  .swal2-html-container {
+    margin: var(--s-2) var(--s-2) 0;
+    padding: 0;
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .swal2-actions {
+    margin-top: var(--s-5);
+    gap: var(--s-2);
+  }
+
+  // Con `buttonsStyling: false` los botones toman `.btn-*` del portal; solo se
+  // quita el margen propio de SweetAlert (el espaciado lo da `gap`).
+  .swal2-actions .btn {
+    margin: 0;
+  }
+}
+
+// Lista de ítems dentro de un `.wp-swal` (p. ej. productos nuevos a guardar).
+.wp-swal__list {
+  margin: var(--s-3) 0 0;
+  padding: var(--s-2) var(--s-3);
+  max-height: 10rem;
+  overflow-y: auto;
+  list-style: none;
+  text-align: left;
+  font-size: var(--fs-sm);
+  background: var(--n-25);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--r-md);
+
+  li + li {
+    margin-top: var(--s-1);
+  }
+}
