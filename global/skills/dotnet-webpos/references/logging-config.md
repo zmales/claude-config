@@ -1,51 +1,53 @@
 # Logging, auditoría y configuración
 
-Guía completa en el repo: `LoggingGuide.md` y la sección 10 de `ARCHITECTURE_DECISIONS_V1.md` (ADR-013).
+Si el repo tiene `LoggingGuide.md` o un ADR de logging, manda él.
 
-## Logging
+## Logging (WebPOS.Logger)
 
-- Se configura una sola vez con `builder.Logging.AddWPLogging(builder.Configuration)` (`Extensions/LoggingExtensions.cs`).
-  No configures proveedores de log a mano.
-- Usa `ILogger<T>` inyectado o `ILoggerFactory.CreateLogger("<Categoría>." + nombre)`.
-- **El prefijo de la categoría decide a qué tabla de BD va el log**:
+- Se configura una sola vez por host con `builder.Logging.AddWPLogging(builder.Configuration)` (`Extensions/LoggingExtensions.cs`).
+  No añadas proveedores de log a mano.
+- Usa `ILogger<T>` inyectado, o `ILoggerFactory.CreateLogger("<Prefijo>." + nombre)` cuando el destino importa.
+- **El prefijo de la categoría decide a qué BD/tabla de log va** (además de consola, que recibe todas):
 
 | Categoría | Destino | Uso |
 |---|---|---|
-| `Portal.` | `PortalActionLog` | Acciones de usuarios en el portal (alta/edición/baja). `CrudService` ya lo hace solo. |
-| `Sri.` | `SriTraceabilityLog` | Trazabilidad con el SRI (envío, autorización, consultas) |
-| `Events.` | `SystemEventLog` | Eventos de sistema y jobs (Hangfire) |
-| `B2BApi.` | `ApiB2BRequestLog` | Requests de la API B2B |
+| `Portal.` | `PortalActionLog` | Acciones de usuarios (alta/edición/baja). `CrudService` ya lo hace solo. |
+| `Sri.` | `SriTraceabilityLog` | Trazabilidad con la autoridad tributaria |
+| `Events.` | `SystemEventLog` | Eventos de sistema y jobs |
+| `B2BApi.` | `ApiB2BRequestLog` | Requests de la API de integración |
 | `Auth.` | `AuthFailureLog` | Fallos de autenticación |
-| cualquier otra (p. ej. `ILogger<BranchService>`) | Log técnico (consola/archivo) | Diagnóstico |
+| cualquier otra (p. ej. `ILogger<ItemService>`) | **`TechnicalLog` en BD + consola** | Diagnóstico técnico |
 
+  No existe log a archivo (`FileLoggerProvider` se retiró); no lo reintroduzcas. Los hosts pueden tener tablas propias
+  adicionales (p. ej. requests SOAP): ver la skill de contexto.
 - **Logging estructurado** con plantillas, nunca interpolación:
-  `_logger.LogInformation("Sucursal {BranchCod} creada para {CompanyLicCod}", dto.BranchCod, dto.CompanyLicCod);`
-- Niveles: `Information` para hitos de negocio, `Warning` para situaciones recuperables, `Error` con la excepción
-  (`_logger.LogError(ex, "…")`) cuando capturas algo que no relanzas. Los errores no manejados ya los registra el middleware.
-- Llamadas a servicios externos (SRI, licencias, correo): registra inicio, resultado y error.
-- **Nunca registres** contraseñas, tokens, API keys, certificados, connection strings ni cuerpos de request con datos sensibles.
+  `_logger.LogInformation("Ítem {Code} creado para {CompanyLicCod}", dto.Code, dto.CompanyLicCod);`
+- Niveles: `Information` para hitos de negocio, `Warning` para lo recuperable, `Error` con la excepción
+  (`_logger.LogError(ex, "…")`) cuando capturas algo que no relanzas. Los no manejados ya los registra el middleware.
+- Llamadas a servicios externos: registra inicio, resultado y error.
+- **Nunca registres** contraseñas, tokens, API keys, certificados, connection strings, datos personales completos ni
+  cuerpos de request con datos sensibles. Nunca `Console.WriteLine`.
 - `BeginScope` para añadir contexto (empresa, documento) a varios logs seguidos.
+- Salud: los hosts exponen `/health/live` y `/health/ready` (`MapHealthChecks`); un check nuevo va en `AddHealthChecks()`.
 
 ## Auditoría de acciones
 
 `CrudService`/`TenantCrudService` registran Create/Update/Delete en `Portal.` con valores anteriores y nuevos.
 - Excluye campos sensibles o ruidosos sobrescribiendo `GetAuditExcludedProperties(entity)`.
-- Desactiva con `AuditPortalActions => false` solo si la entidad ya tiene su propia trazabilidad (como `FiscalDocService`).
-- En métodos propios que modifican datos, llama a `LogPortalAction("Update", entity, snapshot)` (captura antes con `CaptureAuditSnapshot`).
+- Desactiva con `AuditPortalActions => false` solo si la entidad ya tiene su propia trazabilidad de negocio.
+- En métodos propios que modifican datos: `CaptureAuditSnapshot` antes de mutar y `LogPortalAction("Update", entity, snapshot)` después.
 
 ## Configuración
 
 | Fuente | Qué va ahí |
 |---|---|
-| `Shared/appsettings.Shared.json` | Constantes de plataforma comunes a las 3 APIs. Se carga primero. |
-| `appsettings.json` / `appsettings.{Environment}.json` de cada API | Lo propio de cada API; sobrescribe a Shared. |
+| `appsettings` compartido de la solución (si existe) | Constantes de plataforma comunes a todos los hosts. Se carga primero. |
+| `appsettings.json` / `appsettings.{Environment}.json` de cada host | Lo propio de cada host; sobrescribe al compartido. |
 | Variables de entorno / secretos del despliegue | Cadenas de conexión, claves, contraseñas. **Nunca en el repo.** |
-| Tabla `Config` (`ConfigTypes`) | Configuración de negocio editable: valor global con `CompanyLicCod = "SYSTEM"` y override por empresa. Tipos `Dft*` = canónicos. |
-| `Config` con `ConfigType = Agent` (`AgentCfg`, ADR-011) | Configuración de emisión por punto de emisión. Se resuelve **solo** con `IAgentCfgResolver` (cascada empresa → SYSTEM). |
-| Ajustes de empresa | Endpoint unificado `Company/{licCod}/settings` (`ICompanySettingsService`). |
+| Tabla `Config` (tipos en `ConfigTypes`) | Configuración de negocio editable: valor global con `CompanyLicCod = "SYSTEM"` y override por empresa. |
 
-- Clases de opciones tipadas en `05-…Common/Config/` (`LicenseServiceOptions`, `SriJobPollingOptions`…). Para un valor nuevo
-  de plataforma, crea o extiende una clase de opciones en lugar de leer `IConfiguration` suelto en un servicio.
-- Un tipo de configuración nuevo en BD: constante en `ConfigTypes` + entrada en `ConfigTypeCatalog`.
-- Caché: claves en `Constants/CacheKeys.cs`; invalida la caché cuando cambies el dato que cachea.
-- Trabajos en segundo plano: Hangfire, aislado según el ADR (sección 7). Nunca lances trabajo largo desde un endpoint sin pasar por un job.
+- Clases de opciones tipadas en `05-…/Config/`. Para un valor nuevo de plataforma, crea o extiende una clase de opciones en
+  vez de leer `IConfiguration` suelto en un servicio.
+- Tipo de configuración nuevo en BD: constante en `ConfigTypes` + su entrada en el catálogo de tipos.
+- Caché: claves centralizadas (`Constants/CacheKeys.cs`); invalida la caché cuando cambies el dato que cachea.
+- Trabajo en segundo plano: Hangfire, según el ADR del repo. Nunca lances trabajo largo desde un endpoint sin un job.

@@ -1,47 +1,65 @@
 # Errores y excepciones
 
-Guía completa en el repo: `ExceptionHandlingGuide.md`. Clases en `05-WPApiPortalFeEc.Common/Exceptions/`.
+Clases en `05-<Api>.Common/Exceptions/`. Si el repo tiene una guía propia (p. ej. `ExceptionHandlingGuide.md`), manda ella.
 
 ## Jerarquía y mapeo HTTP
 
-`BaseException(errorCode, technicalMessage, userMessage, severity)` + `.WithMetadata(key, value)`.
+```
+BaseException(errorCode, technicalMessage, userMessage, severity) + .WithMetadata(key, value)
+├── DomainException
+│   ├── EntityNotFoundException          404
+│   ├── DuplicateEntityException         409
+│   ├── BusinessRuleViolationException   422
+│   └── InvalidEntityStateException      422
+├── ValidationException                  400
+└── InfrastructureException              500 (no mapeadas)
+    ├── DatabaseConnectionException, RepositoryException
+    └── ExternalServiceException
+```
 
-| Excepción | Constructor | HTTP |
-|---|---|---|
-| `ValidationExceptions.ValidationException` | `(fieldName, errorMessage)` / `(fieldName, List<string>)` | 400 |
-| `DomainExceptions.EntityNotFoundException` | `(entityName, id)` / `(entityName, fieldName, fieldValue)` | 404 |
-| `DomainExceptions.DuplicateEntityException` | `(entityName, fieldName, fieldValue)` | 409 |
-| `DomainExceptions.BusinessRuleViolationException` | `(ruleName, ruleDescription, userMessage[, messageCodes])` | 422 |
-| `DomainExceptions.InvalidEntityStateException` | — | 422 |
-| `InfrastructureExceptions.ExternalServiceException` | `(serviceName, endpoint, technicalMessage, httpStatusCode?, inner?)` | 500 (no mapeada) |
-| `InfrastructureExceptions.DatabaseConnectionException`, `RepositoryException` | — | 500 (no mapeada) |
+| Excepción | Constructor |
+|---|---|
+| `ValidationException` | `(fieldName, errorMessage)` / `(fieldName, List<string>)` |
+| `EntityNotFoundException` | `(entityName, id)` / `(entityName, fieldName, fieldValue)` |
+| `DuplicateEntityException` | `(entityName, fieldName, fieldValue)` |
+| `BusinessRuleViolationException` | `(ruleName, ruleDescription, userMessage[, messageCodes])` — `userMessage` va tal cual al usuario |
+| `InvalidEntityStateException` | `(entityName, entityId, currentState, attemptedOperation)` |
+| `ExternalServiceException` | `(serviceName, endpoint, technicalMessage, httpStatusCode?, inner?)` |
 
-El mapeo está en `Program.cs` (`app.UseWebPOSExceptionHandler(options => options.Map<…>(status, title, ProblemTypeUris.X))`)
-y produce `ProblemDetails`. **Si creas una excepción nueva, mapéala ahí** (y en las otras APIs si también la lanzan).
+El mapeo está en `Program.cs` de cada host (`app.UseWebPOSExceptionHandler(o => o.Map<…>(status, title, ProblemTypeUris.X))`)
+y produce `ProblemDetails`. **Si creas una excepción nueva, mapéala en todos los hosts que puedan lanzarla.**
 
-En servicios, `ValidationException` choca de nombre con `System.ComponentModel.DataAnnotations`: usa el alias del repo
-`using PortalValidationException = WPApiPortalFeEc.Common.Exceptions.ValidationExceptions.ValidationException;`.
+`ValidationException` choca con `System.ComponentModel.DataAnnotations`: usa el alias
+`using PortalValidationException = <Api>.Common.Exceptions.ValidationExceptions.ValidationException;`.
 
 ## Mensajes al usuario: `ErrorMessages.json`
 
-`05-WPApiPortalFeEc.Common/Resources/ErrorMessages.json`, leído por `ErrorMessageCatalog.Get(errorCode, screen)`:
+`05-…/Resources/ErrorMessages.json` (recurso embebido), leído por `ErrorMessageCatalog.Get(errorCode, sección)`:
+
+1. Busca `errorCode` en la sección indicada; 2. si no, en `COMMON`; 3. si no, devuelve **"Ha ocurrido un error inesperado."**
+
+Las excepciones arman código y sección a partir del `entityName`:
+- `EntityNotFoundException(entityName, …)` → código `<ENTITYNAME>_NOT_FOUND`, sección `<ENTITYNAME>`.
+- `DuplicateEntityException(entityName, field, …)` → código `<ENTITYNAME>_DUPLICATE_<FIELD>`, sección `<ENTITYNAME>`.
+- `CrudService` lanza `EntityNotFoundException(typeof(TEntity).Name, id)`: la sección es el **nombre de la clase de la
+  entidad** (no el de la pantalla). `COMMON` no tiene `<X>_NOT_FOUND` genérico, así que **cada entidad necesita su
+  `<ENTIDAD>_NOT_FOUND`** o el usuario verá el mensaje de error inesperado.
 
 ```json
-"CARRIER": {
-  "screen": "Transportista",
-  "path": "/admin/carrier",
+"ITEM": {
+  "screen": "Ítem",
+  "path": "/admin/item",
   "errors": {
-    "CARRIER_NOT_FOUND": "El transportista solicitado no existe.",
-    "CARRIER_DUPLICATE_IDNUMBER": "Ya existe un transportista registrado con esta identificación."
+    "ITEM_NOT_FOUND": "El ítem solicitado no existe.",
+    "ITEM_DUPLICATE_CODE": "Ya existe un ítem con este código."
   }
 }
 ```
 
-- `EntityNotFoundException("Carrier", id)` busca `CARRIER_NOT_FOUND` en la sección `CARRIER`, luego en `COMMON`.
-- `DuplicateEntityException("Carrier", "IdNumber", valor)` busca `CARRIER_DUPLICATE_IDNUMBER`.
-- Por eso: **el `entityName` que pasas define la sección y el código**. Para una pantalla nueva, añade su sección con
-  `screen`, `path` (ruta del front) y los códigos que vas a lanzar. Si falta, cae en el mensaje genérico de `COMMON`.
-- Mensajes en español, para el usuario final, sin detalles técnicos. El detalle va en `technicalMessage`/metadata (logs).
+- Si una pantalla trabaja sobre la entidad de otra (p. ej. un rol sobre una tabla compartida), los 404 de la base usan la
+  sección de la **entidad**; las excepciones que lances tú deben usar un `entityName` coherente (todas con el de la entidad,
+  o todas con el de la pantalla y su sección completa). No mezcles.
+- Mensajes en español, para el usuario final, sin detalles técnicos; el detalle va en `technicalMessage`/metadata (logs).
 
 ## Reglas
 
@@ -50,7 +68,8 @@ En servicios, `ValidationException` choca de nombre con `System.ComponentModel.D
 - Duplicados: verifica antes de insertar (`AnyAsync`) → `DuplicateEntityException`, con índice `UNIQUE` en BD como respaldo.
 - Reglas de negocio (límite del plan, estado no permitido) → `BusinessRuleViolationException` con mensaje claro.
 - No captures `BaseException` para relanzarla ni envuelvas todo en `try/catch`: deja que suba al middleware.
-- Nunca `catch { }` vacío. Si capturas para degradar con elegancia (p. ej. un servicio externo opcional), registra el error.
-- Errores de servicios externos (SRI, licencias, correo) → `ExternalServiceException` con el nombre del servicio y endpoint.
-- `ErrorSeverity.Critical` solo para fallos de sistema, nunca para errores de negocio.
-- Validaciones de parámetros de consulta en controllers: textos de `01-…API/Code/ErrorMessages.cs`.
+- Nunca `catch { }` vacío. Si capturas para degradar con elegancia (servicio externo opcional), registra el error o
+  explica en un comentario por qué se ignora.
+- Errores de servicios externos → `ExternalServiceException` con el nombre del servicio y el endpoint.
+- `ErrorSeverity`: `Information` (flujo normal: 404/409), `Warning` (recuperable / negocio), `Error`, `Critical` (solo fallos de sistema).
+- Validaciones de parámetros de consulta en controllers: textos de `01-…/Code/ErrorMessages.cs`.
