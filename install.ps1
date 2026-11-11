@@ -124,6 +124,7 @@ function Instalar-Global {
         (Join-Path $ClaudeHome 'agents'),
         (Join-Path $ClaudeHome 'skills'),
         (Join-Path $ClaudeHome 'commands'),
+        (Join-Path $ClaudeHome 'hooks\webpos'),
         (Join-Path $ClaudeHome 'CLAUDE.md')
     ) 'global'
     Retirar $ClaudeHome (Join-Path $Repo 'global\retirado.txt')
@@ -134,6 +135,9 @@ function Instalar-Global {
     Get-ChildItem (Join-Path $Repo 'global\skills') -Directory | ForEach-Object {
         Copiar-Carpeta $_.FullName (Join-Path $ClaudeHome "skills\$($_.Name)")
     }
+    # Scripts de los hooks declarados en el frontmatter de los agentes. Subcarpeta propia para no pisar
+    # otros hooks que el usuario tenga en ~/.claude/hooks.
+    Copiar-Carpeta (Join-Path $Repo 'global\hooks') (Join-Path $ClaudeHome 'hooks\webpos')
     Instalar-ClaudeMd (Join-Path $Repo 'global\CLAUDE.md') (Join-Path $ClaudeHome 'CLAUDE.md')
 
     # /init-proyecto lee esta ruta para crear la copia versionada de un proyecto nuevo en el repo.

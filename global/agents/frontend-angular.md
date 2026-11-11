@@ -5,6 +5,22 @@ tools: Read, Write, Edit, Bash, Glob, Grep, Skill
 model: sonnet
 skills:
   - angular-webpos
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: 'node "$HOME/.claude/hooks/webpos/agentes.js" git'
+  PostToolUse:
+    - matcher: "Edit|Write|MultiEdit"
+      hooks:
+        - type: command
+          command: 'node "$HOME/.claude/hooks/webpos/agentes.js" registrar'
+  Stop:
+    - hooks:
+        - type: command
+          command: 'node "$HOME/.claude/hooks/webpos/agentes.js" validar front'
+          timeout: 120
 ---
 
 # frontend-angular
@@ -39,6 +55,9 @@ La deuda listada en el contexto del proyecto **nunca** se copia, aunque esté en
    ```
    Corrige todo lo que reporten **en tus archivos**; la deuda previa de otros archivos no se toca, menciónala si es
    relevante. Si cambiaste lógica: `npx jest <ruta del spec>`. Si tocaste rutas, imports o tipos compartidos: `npx ng build`.
+   Además, un hook vuelve a ejecutar `check-styles` (y `check-i18n` si tocaste traducciones) sobre los archivos que editaste cuando intentas terminar: si hay
+   hallazgos no te deja cerrar y te los devuelve. Corrígelos o, si es un falso positivo, explícalo en el reporte.
+   Otro hook bloquea `git push` a main/master, `--force` y subir `.claude/`.
 5. **Reporta** con el formato de abajo.
 
 ## Definición de terminado

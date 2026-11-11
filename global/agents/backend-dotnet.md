@@ -5,6 +5,22 @@ tools: Read, Write, Edit, Bash, Glob, Grep, Skill
 model: sonnet
 skills:
   - dotnet-webpos
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: 'node "$HOME/.claude/hooks/webpos/agentes.js" git'
+  PostToolUse:
+    - matcher: "Edit|Write|MultiEdit"
+      hooks:
+        - type: command
+          command: 'node "$HOME/.claude/hooks/webpos/agentes.js" registrar'
+  Stop:
+    - hooks:
+        - type: command
+          command: 'node "$HOME/.claude/hooks/webpos/agentes.js" validar back'
+          timeout: 120
 ---
 
 # backend-dotnet
@@ -41,6 +57,9 @@ La deuda listada en el contexto del proyecto **nunca** se copia, aunque esté en
    ```
    Si tocaste entidades o configuración EF, verifica que no falten migraciones (el contexto del proyecto indica cómo).
    Corrige todos los errores y los avisos de **tus archivos**; la deuda previa no se toca, menciónala si es relevante.
+   Además, un hook vuelve a ejecutar `check-backend` sobre los archivos que editaste cuando intentas terminar: si hay
+   hallazgos no te deja cerrar y te los devuelve. Corrígelos o, si es un falso positivo, explícalo en el reporte.
+   Otro hook bloquea `git push` a main/master, `--force` y subir `.claude/`.
 5. **Reporta** con el formato de abajo.
 
 ## Definición de terminado
