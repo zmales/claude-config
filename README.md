@@ -11,6 +11,7 @@ claude-config/
 ├── global/                     → ~/.claude   (normas de la empresa, todos los proyectos)
 │   ├── CLAUDE.md               regla: los cambios de código se delegan a agentes
 │   ├── agents/                 frontend-angular · backend-dotnet · code-review · ux-review · design-fix · documentation
+│   ├── hooks/agentes.js        hooks de frontend-angular y backend-dotnet → ~/.claude/hooks/webpos
 │   ├── skills/
 │   │   ├── angular-webpos/     normas Angular: arquitectura, componentes, sistema de diseño, scripts, plantillas
 │   │   ├── dotnet-webpos/      normas .NET: capas, servicios, EF, errores, seguridad, scripts, plantillas
@@ -30,6 +31,22 @@ claude-config/
 Si menciona rutas, deuda o decisiones de un solo repo, va en `proyectos/<repo>/`.
 
 **Quién manda:** código del repo → contexto del proyecto → normas globales → conocimiento general.
+
+## Hooks de los agentes
+
+`frontend-angular` y `backend-dotnet` declaran hooks en su frontmatter que ejecuta `global/hooks/agentes.js`.
+Convierten en obligatorias reglas que antes dependían solo del prompt:
+
+| Hook | Qué hace |
+|---|---|
+| `PostToolUse` (Edit/Write) | Anota cada archivo que edita el agente. |
+| `Stop` | Al terminar, corre `check-styles` (+ `check-i18n` si tocó traducciones) o `check-backend` **solo sobre los archivos anotados**. Si hay hallazgos, el agente no puede cerrar y los recibe para corregirlos. Tras 3 intentos lo deja terminar (debe explicarlo en su reporte). |
+| `PreToolUse` (Bash) | Bloquea `git push` a main/master, `push --force`/`-f`/`+rama`, `git add -f` y añadir `.claude/`. |
+
+- La deuda previa del repo no bloquea: solo cuentan los archivos que tocó el agente.
+- Si un validador no puede ejecutarse (sin `node_modules`, sin `.sln`) o el hook falla, no bloquea.
+- `dotnet build`, `dotnet test`, `jest` y `ng build` siguen a cargo del agente (son lentos para un hook).
+- El estado temporal vive en `%TEMP%\claude-webpos-hooks\`.
 
 ## Instalar
 
